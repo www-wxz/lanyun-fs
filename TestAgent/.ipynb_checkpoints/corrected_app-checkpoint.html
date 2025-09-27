@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>图形与几何 — 平行四边形的面积演示</title>
+  <style>
+    :root {
+      --bg0: #f6fafc;
+      --bg1: #ffffff;
+      --bg2: #f8f9fb;
+      --text: #223;
+      --muted: #667085;
+      --brand: #2563eb;
+      --brand-2: #0ea5e9;
+      --ok: #2e7d32;
+      --warn: #eab308;
+      --danger: #ef4444;
+      --indigo: #6366f1;
+      --panel-border: #dbeafe;
+      --panel-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      --grid-weak: rgba(120,140,200,0.12);
+      --grid-strong: rgba(0,0,0,0.6);
+      --card: #ffffff;
+      --hint-bg: #fffbea;
+      --hint-border: #ffe58f;
+      --svg-green: #6aa84f;
+      --svg-green-fill: #dcedc8;
+      --svg-orange: #ff8a65;
+      --svg-orange-fill: #ffe0b2;
+      --svg-blue: #1976d2;
+      --svg-blue-fill: #bbdefb;
+    }
+    
+    body.hc {
+      --bg0: #fff8db;
+      --bg1: #ffffff;
+      --bg2: #fffbcc;
+      --text: #000;
+      --muted: #111;
+      --panel-border: #111;
+      --panel-shadow: none;
+      --grid-weak: rgba(0,0,0,0.6);
+    }
+    
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background: linear-gradient(to bottom, #eff6ff 0%, #ffffff 45%);
+    }
+    
+    /* 布局组件 */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 16px;
+    }
+    
+    /* 头部样式 */
+    .header {
+      width: 100%;
+      background: linear-gradient(90deg, #dbeafe 0%, #ecfccb 100%);
+      border-bottom: 1px solid #bfdbfe;
+    }
+    
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    
+    .title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e40af;
+    }
+    
+    .subtitle {
+      margin: 4px 0 0 0;
+      font-size: 14px;
+      color: #2563eb;
+    }
+    
+    .badge {
+      font-size: 13px;
+      color: #1d4ed8;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      padding: 6px 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      white-space: nowrap;
+    }
+    
+    .courseMeta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #1f2937;
+    }
+    
+    .courseMeta span {
+      background: #ffffffaa;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+    
+    /* 主内容区域 */
+    .main {
+      min-height: 60vh;
+    }
+    
+    .main-flex {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    
+    .side {
+      width: 260px;
+      background: var(--bg1);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      box-shadow: var(--panel-shadow);
+      padding: 12px;
+    }
+    
+    .canvas-wrap {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 0 8px;
+    }
+    
+    .canvas-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e40af;
+    }
+    
+    .canvas-description {
+      font-size: 13px;
+      color: #6b7280;
+      max-width: 500px;
+    }
+    
+    .canvas-box {
+      position: relative;
+      border: 2px solid var(--panel-border);
+      border-radius: 14px;
+      background: var(--bg1);
+      box-shadow: var(--panel-shadow);
+      height: 50vh;
+      min-height: 380px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    .canvas-grid {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(0deg, var(--grid-weak) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-weak) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    
+    .grid-indicator {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      font-size: 12px;
+      background: #ffffffb3;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 3px 7px;
+      color: #374151;
+    }
+    
+    .placeholder {
+      position: absolute;
+      max-width: 640px;
+      text-align: center;
+      background: #ffffffcc;
+      border: 1px dashed #dbeafe;
+      border-radius: 10px;
+      padding: 14px 18px;
+      pointer-events: none;
+      user-select: none;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+    
+    .placeholder.hidden {
+      opacity: 0;
+    }
+    
+    .ph-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .ph-sub {
+      font-size: 14px;
+      color: #6b7280;
+    }
+    
+    svg.geom {
+      background: var(--bg2);
+      border-radius: 8px;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* 步骤引导 */
+    .progressbar {
+      height: 8px;
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    
+    .progressbar .bar {
+      height: 100%;
+      background: #4caf50;
+      width: 0%;
+      transition: width .3s;
+    }
+    
+    .steps {
+      list-style: none;
+      padding-left: 0;
+      margin: 10px 0 0 0;
+    }
+    
+    .steps li {
+      margin-bottom: 8px;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 6px;
+    }
+    
+    .steps li.active {
+      background: rgba(76,175,80,0.08);
+    }
+    
+    .step-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      color: #111827;
+      font-size: 14px;
+    }
+    
+    .step-summary {
+      font-size: 12px;
+      color: #555;
+      margin-top: 2px;
+    }
+    
+    .tag-active {
+      font-size: 12px;
+      color: #2e7d32;
+      margin-left: 8px;
+    }
+    
+    /* 提示面板 */
+    .hint-item {
+      margin-bottom: 8px;
+      background: var(--hint-bg);
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid var(--hint-border);
+      font-size: 13px;
+      color: #222;
+    }
+    
+    .hint-empty {
+      font-size: 13px;
+      color: #888;
+    }
+    
+    .formula {
+      background: #f6f8fa;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px dashed #ddd;
+      font-size: 16px;
+      color: #111;
+    }
+    
+    .teacher-notes {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #0b5345;
+    }
+    
+    .panel {
+      background: var(--bg1);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      box-shadow: var(--panel-shadow);
+      padding: 10px;
+    }
+    
+    .controls-inline {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      width: 100%;
+      background: linear-gradient(to top, #ffffff 0%, #eff6ff 100%);
+      border-top: 1px solid #e5e7eb;
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
+    }
+    
+    .toolbar .row {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .btn {
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 16px;
+      line-height: 1;
+      border: none;
+    }
+    
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+    
+    .btn-start { 
+      background: #3b82f6; 
+      color: #fff; 
+      box-shadow: 0 2px 6px rgba(59,130,246,.25);
+    }
+    
+    .btn-pause { 
+      background: #facc15; 
+      color: #111; 
+    }
+    
+    .btn-reset { 
+      background: #ef4444; 
+      color: #fff; 
+    }
+    
+    .btn-ghost { 
+      background: #fff; 
+      color: #1d4ed8; 
+      border: 1px solid #c7d2fe; 
+    }
+    
+    .chip {
+      padding: 6px 10px; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      border: 1px solid #e5e7eb; 
+      background: #fff; 
+      color: #374151;
+    }
+    
+    .chip.active { 
+      background: #dcfce7; 
+      color: #166534; 
+      border-color: #bbf7d0; 
+    }
+    
+    .chip.dark { 
+      background: #000; 
+      color: #fff; 
+      border-color: #000; 
+    }
+    
+    .num-field {
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      background: #fff; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 8px; 
+      padding: 4px 6px;
+    }
+    
+    .num-field input {
+      width: 80px; 
+      padding: 6px 8px; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 6px; 
+      font-size: 14px;
+    }
+    
+    .switch-wrap {
+      display: flex; 
+      align-items: center; 
+      gap: 8px;
+    }
+    
+    .speed-wrap {
+      display: flex; 
+      align-items: center; 
+      gap: 8px;
+    }
+    
+    .speed-wrap input[type="range"] { 
+      width: 190px; 
+    }
+    
+    /* 浮动提示 */
+    .float-hint {
+      position: fixed; 
+      right: 24px; 
+      bottom: 24px; 
+      z-index: 1000;
+      transition: all .3s;
+    }
+    
+    .float-card {
+      background: #fff; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 12px; 
+      box-shadow: var(--panel-shadow); 
+      padding: 10px; 
+      max-width: 320px;
+    }
+    
+    .float-head {
+      display: flex; 
+      gap: 10px; 
+      align-items: flex-start;
+    }
+    
+    .float-avatar {
+      width: 40px; 
+      height: 40px; 
+      border-radius: 999px; 
+      background: #fde68a; 
+      color: #92400e; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    
+    .float-close {
+      border: none; 
+      background: transparent; 
+      cursor: pointer; 
+      color: #9ca3af; 
+      font-size: 18px;
+    }
+    
+    .float-note {
+      text-align: right; 
+      font-size: 12px; 
+      color: #6b7280; 
+      margin-top: 6px;
+    }
+    
+    /* 信息行 */
+    .info-row {
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-top: 6px; 
+      font-size: 13px;
+    }
+    
+    .small {
+      font-size: 12px;
+      color: #555;
+    }
+    
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; 
+      background: #f3f4f6; 
+      border: 1px solid #e5e7eb; 
+      padding: 2px 6px; 
+      border-radius: 4px;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 1024px) {
+      .main-flex { 
+        flex-direction: column; 
+      }
+      
+      .side { 
+        width: 100%; 
+      }
+      
+      .canvas-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="container header-row">
+      <div>
+        <h1 class="title" id="pageTitle">图形与几何 — 平行四边形的面积演示</h1>
+        <p class="subtitle" id="stepSubtitle">步骤 1/5：初始观察</p>
+        <div class="courseMeta" aria-label="课程信息">
+          <span>一级主题：图形与几何</span>
+          <span>二级主题：图形 的认识与测量</span>
+          <span>课标：探索并掌握平行四边形、三角形和梯形的面积计算公式</span>
+        </div>
+      </div>
+      <div>
+        <span class="badge">适用年级: 5～6年级</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main" role="main">
+    <div class="main-flex" aria-label="教学主区布局">
+      <!-- 左侧 StepGuide -->
+      <aside class="side" aria-label="步骤引导" id="stepGuidePanel">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="flex:1;">
+            <div class="progressbar" aria-hidden="true">
+              <div class="bar" id="progressBar" style="width:20%;"></div>
+            </div>
+          </div>
+          <div id="progressText" class="small">1 / 5</div>
+        </div>
+        <ol class="steps" id="stepList" aria-label="步骤列表"></ol>
+      </aside>
+
+      <!-- 中间 画布 -->
+      <section class="canvas-wrap" aria-label="几何动画演示区">
+        <div class="canvas-header">
+          <div class="canvas-title">几何演示区</div>
+          <div class="canvas-description">在此区域会显示平行四边形的动态演示。使用底部控件开始/控制动画，或拖动上边顶点改变形状。</div>
+        </div>
+        <div class="canvas-box" id="canvasBox" role="region" aria-label="主动画画布" aria-live="polite" tabindex="0">
+          <div class="canvas-grid" id="gridLayer"></div>
+          <div class="grid-indicator" id="gridIndicator">网格: 显示</div>
+          <div class="placeholder" id="placeholder">
+            <div class="ph-title">欢迎使用平行四边形面积演示工具</div>
+            <div class="ph-sub">点击"开始"按钮启动演示，或直接拖拽图形上的控制点进行交互</div>
+          </div>
+          <svg id="geomSVG" class="geom" aria-label="可交互的平行四边形演示" role="img"></svg>
+        </div>
+      </section>
+
+      <!-- 右侧 提示/数值面板 -->
+      <aside class="side" aria-label="提示与数值面板">
+        <div class="panel" style="margin-bottom:10px;">
+          <div style="font-size:13px; color:#111; margin-bottom:6px;"><strong>数值面板</strong></div>
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <div style="font-size:12px; width:50px;">底 (b)</div>
+            <input type="range" id="sliderB" min="40" max="400" value="300" style="flex:1;">
+            <div style="width:52px; text-align:right; font-size:12px;"><span id="lblB">300</span> px</div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <div style="font-size:12px; width:50px;">高 (h)</div>
+            <input type="range" id="sliderH" min="10" max="320" value="150" style="flex:1;">
+            <div style="width:52px; text-align:right; font-size:12px;"><span id="lblH">150</span> px</div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div style="font-size:12px; width:50px;">倾斜</div>
+            <input type="range" id="sliderTilt" min="-280" max="280" value="80" style="flex:1;">
+            <div style="width:52px; text-align:right; font-size:12px;"><span id="lblTilt">80</span> px</div>
+          </div>
+
+          <div class="info-row">
+            <div><strong>面积</strong></div>
+            <div style="font-size:16px; color:#0b63c6; font-weight:600;" id="areaVal">45000 px²</div>
+          </div>
+
+          <div class="small" style="margin-top:8px;">
+            提示：拖动画布上方的圆点或调整滑块，可以改变平行四边形的形状。高度 h 为到底边的垂直距离（虚线投影）。
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:10px;">
+          <div style="font-size:13px; margin-bottom:6px;"><strong>分割与拼接</strong></div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <div style="font-size:12px; width:60px;">切割位置</div>
+            <input type="range" id="sliderCut" min="0.05" max="0.45" step="0.01" value="0.25" style="flex:1;">
+            <div style="width:36px; text-align:right; font-size:12px;"><span id="lblCut">25</span>%</div>
+          </div>
+          <div class="controls-inline">
+            <button id="btnShowCut">显示切割</button>
+            <button id="btnTranslate" class="primary">平移拼接</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <input id="chkGridFill" type="checkbox" checked>
+            <label for="chkGridFill" class="small">矩形格子填充</label>
+          </div>
+          <div class="teacher-notes" id="teacherNote">
+            教师提示：可先示范一次从"切割"到"平移"完整过程，再让学生尝试改变 b/h 观察面积变化。
+          </div>
+        </div>
+
+        <div class="panel" style="font-size:12px;">
+          <div style="margin-bottom:6px;"><strong>交互反馈</strong></div>
+          <div id="telemetry" style="color:#666; line-height:1.5;">
+            底 = 300px, 高 = 150px, 倾斜 = 80px<br>
+            当前面积（计算） = 底 × 高 = 300 × 150 = 45000 px²
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <div style="font-size:13px; color:#111; margin-bottom:6px;"><strong>动态提示</strong></div>
+          <div id="hintStack"></div>
+          <div style="margin-top:8px;">
+            <div class="small" style="margin-bottom:6px;">关键结论（占位公式）</div>
+            <div class="formula">面积 S = 底 × 高</div>
+          </div>
+          <div class="teacher-notes" id="teacherNotesList"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- 工具栏 -->
+  <div class="toolbar" role="contentinfo">
+    <div class="row">
+      <!-- left -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-start" id="btnStart" aria-label="开始动画">开始</button>
+        <button class="btn btn-pause" id="btnPause" aria-label="暂停动画">暂停</button>
+        <button class="btn btn-reset" id="btnReset" aria-label="重置动画">重置</button>
+        <button class="btn btn-ghost" id="btnPrev" aria-label="上一步">上一步</button>
+        <button class="btn btn-ghost" id="btnNext" aria-label="下一步">下一步</button>
+      </div>
+
+      <!-- middle -->
+      <div style="display:flex; align-items:center; gap:16px; flex:1; justify-content:center; flex-wrap:wrap;">
+        <div class="speed-wrap">
+          <span class="small" style="font-weight:600;">速度</span>
+          <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="1" aria-label="播放速度滑条 0.5 到 2 倍">
+          <span class="small" id="speedLabel">1x</span>
+        </div>
+
+        <div class="switch-wrap">
+          <button id="btnToggleGrid" class="chip active" aria-pressed="true" aria-label="显示或隐藏网格">网格开关</button>
+          <button id="btnHighContrast" class="chip" aria-pressed="false" aria-label="高对比模式切换">高对比度</button>
+        </div>
+      </div>
+
+      <!-- right -->
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <label class="num-field">
+          <span class="small">底 b</span>
+          <input id="numBase" type="number" min="40" max="400" step="1" value="300" aria-label="基底 b">
+        </label>
+        <label class="num-field">
+          <span class="small">高 h</span>
+          <input id="numHeight" type="number" min="10" max="320" step="1" value="150" aria-label="对应高 h">
+        </label>
+        <button id="btnTeacher" class="chip" aria-pressed="false" aria-label="教师模式切换">教师模式</button>
+        <button id="btnHint" class="chip" aria-pressed="false" aria-label="提示或示答" disabled>提示</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 浮动提示 -->
+  <div class="float-hint" id="floatHint" style="opacity:0; transform:translateY(12px); pointer-events:none;">
+    <div class="float-card">
+      <div class="float-head">
+        <div class="float-avatar">师</div>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:700; color:#111;">教师提示</div>
+          <div style="margin-top:4px; font-size:13px; color:#374151;" id="floatHintText">提示：平行四边形的面积 = 底 × 对应高。尝试调整底与高，观察面积变化。</div>
+        </div>
+        <button class="float-close" id="floatClose" aria-label="关闭提示">✕</button>
+      </div>
+      <div class="float-note">（仅显示当前教师/学生提示）</div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      // App State
+      const state = {
+        // lesson steps
+        steps: [
+          { id:'observe', title:'初始观察', summary:'识别底与高度，并尝试拖拽顶点观察高度定义不变。' },
+          { id:'cut', title:'分割演示', summary:'将顶角剪切下一个三角形，并准备平移到另一侧。' },
+          { id:'translate', title:'平移拼接', summary:'把被剪出的三角形平移，观察它与剩余部分如何拼成矩形。' },
+          { id:'verify', title:'数值验证', summary:'修改底或高，观察面积如何随之变化。' },
+          { id:'summary', title:'总结扩展', summary:'公式 S = 底 × 高。联系三角形与梯形面积。' }
+        ],
+        stepIndex: 0,
+        // shape
+        width: 760,
+        height: 420,
+        margin: 40,
+        baseLeftX: 100, // margin + 60
+        baseY: 420 - 40, // height - margin
+        b: 300,
+        h: 150,
+        tilt: 80,
+        cutT: 0.25,
+        translateProgress: 0,
+        showGrid: true,
+        rectGridFill: true,
+        // control
+        isPlaying: false,
+        isPaused: false,
+        speed: 1,
+        teacherMode: false,
+        showHint: false,
+        highContrast: false,
+        // internals
+        timers: [],
+        rafId: null,
+        dragging: null, // 'topLeft' | 'topRight' | 'topEdge' | null
+        teacherNotes: [
+          '建议先演示一遍完整动画，再让学生操作。',
+          '重点强调：高度为垂直距离而非斜边长度。',
+          '课堂控制：逐步播放并在每步停顿提问。',
+          '可启用教师模式查看标准答案与教学建议。'
+        ],
+        messages: [],
+        activeHint: '',
+        hasInteracted: false
+      };
+
+      // DOM refs
+      const stepSubtitle = document.getElementById('stepSubtitle');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      const stepList = document.getElementById('stepList');
+      const hintStack = document.getElementById('hintStack');
+      const teacherNotesList = document.getElementById('teacherNotesList');
+      const canvasBox = document.getElementById('canvasBox');
+      const gridLayer = document.getElementById('gridLayer');
+      const gridIndicator = document.getElementById('gridIndicator');
+      const placeholder = document.getElementById('placeholder');
+      const svg = document.getElementById('geomSVG');
+      const sliderB = document.getElementById('sliderB');
+      const sliderH = document.getElementById('sliderH');
+      const sliderTilt = document.getElementById('sliderTilt');
+      const lblB = document.getElementById('lblB');
+      const lblH = document.getElementById('lblH');
+      const lblTilt = document.getElementById('lblTilt');
+      const areaVal = document.getElementById('areaVal');
+      const telemetry = document.getElementById('telemetry');
+      const sliderCut = document.getElementById('sliderCut');
+      const lblCut = document.getElementById('lblCut');
+      const chkGridFill = document.getElementById('chkGridFill');
+      const teacherNote = document.getElementById('teacherNote');
+
+      const btnShowCut = document.getElementById('btnShowCut');
+      const btnTranslate = document.getElementById('btnTranslate');
+
+      const btnStart = document.getElementById('btnStart');
+      const btnPause = document.getElementById('btnPause');
+      const btnReset = document.getElementById('btnReset');
+      const btnPrev = document.getElementById('btnPrev');
+      const btnNext = document.getElementById('btnNext');
+
+      const speedRange = document.getElementById('speedRange');
+      const speedLabel = document.getElementById('speedLabel');
+      const btnToggleGrid = document.getElementById('btnToggleGrid');
+      const btnHighContrast = document.getElementById('btnHighContrast');
+
+      const numBase = document.getElementById('numBase');
+      const numHeight = document.getElementById('numHeight');
+      const btnTeacher = document.getElementById('btnTeacher');
+      const btnHint = document.getElementById('btnHint');
+
+      const floatHint = document.getElementById('floatHint');
+      const floatHintText = document.getElementById('floatHintText');
+      const floatClose = document.getElementById('floatClose');
+
+      // Utility
+      function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+      function dist(x1,y1,x2,y2){ const dx=x1-x2, dy=y1-y2; return Math.hypot(dx,dy); }
+      function lerp(a,b,t){ return a+(b-a)*t; }
+      function easeInOut(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+      function addMessage(msg){
+        state.messages.unshift(msg);
+        state.messages = state.messages.slice(0,6);
+      }
+
+      // Hide placeholder on interaction
+      function hidePlaceholder() {
+        if (!state.hasInteracted) {
+          state.hasInteracted = true;
+          placeholder.classList.add('hidden');
+        }
+      }
+
+      // Build Step list
+      function renderStepList(){
+        stepList.innerHTML = '';
+        state.steps.forEach((s, idx)=>{
+          const li = document.createElement('li');
+          li.className = idx===state.stepIndex ? 'active' : '';
+          const title = document.createElement('div');
+          title.className = 'step-title';
+          title.innerHTML = `<span>${s.title}</span>${idx===state.stepIndex?'<span class="tag-active">当前</span>':''}`;
+          const sum = document.createElement('div');
+          sum.className = 'step-summary';
+          sum.textContent = s.summary;
+          li.appendChild(title);
+          li.appendChild(sum);
+          li.addEventListener('click', ()=>{
+            hidePlaceholder();
+            stopAllAnimations();
+            state.stepIndex = idx;
+            if (idx!==2) state.translateProgress = (idx>=3?1:0);
+            state.activeHint = s.summary;
+            if(idx===1){ /* show cut */ }
+            if(idx===2){ /* start translate animate */ animateTranslateTo(1); }
+            renderAll();
+          });
+          stepList.appendChild(li);
+        });
+        const percent = ((state.stepIndex+1)/state.steps.length)*100;
+        progressBar.style.width = percent+'%';
+        progressText.textContent = `${state.stepIndex+1} / ${state.steps.length}`;
+      }
+
+      // Header subtitle
+      function renderSubtitle(){
+        const s = state.steps[state.stepIndex];
+        stepSubtitle.textContent = `步骤 ${state.stepIndex+1}/${state.steps.length}：${s.title}`;
+      }
+
+      // Right hints
+      function renderHints(){
+        hintStack.innerHTML = '';
+        const merged = [state.activeHint, ...state.messages].filter(Boolean);
+        if(merged.length===0){
+          const empty = document.createElement('div');
+          empty.className='hint-empty';
+          empty.textContent='请开始交互，系统将提供提示。';
+          hintStack.appendChild(empty);
+        }else{
+          merged.forEach((m)=>{
+            const div = document.createElement('div');
+            div.className='hint-item';
+            div.textContent = m;
+            hintStack.appendChild(div);
+          });
+        }
+
+        // Teacher notes
+        teacherNotesList.innerHTML = '';
+        if(state.teacherMode){
+          const strong = document.createElement('div');
+          strong.className='teacher-notes';
+          strong.innerHTML = '<strong>教师提示：</strong>';
+          teacherNotesList.appendChild(strong);
+          const ul = document.createElement('ul');
+          ul.style.marginTop='6px';
+          state.teacherNotes.forEach(n=>{
+            const li=document.createElement('li');
+            li.textContent = n;
+            ul.appendChild(li);
+          });
+          teacherNotesList.appendChild(ul);
+          teacherNote.style.display='';
+        }else{
+          teacherNote.style.display='none';
+        }
+      }
+
+      // Toolbar states
+      function renderToolbar(){
+        btnPause.textContent = state.isPaused ? '继续' : '暂停';
+        speedLabel.textContent = state.speed.toFixed(1)+'x';
+        btnToggleGrid.classList.toggle('active', state.showGrid);
+        btnHighContrast.classList.toggle('dark', state.highContrast);
+        btnHighContrast.classList.toggle('active', state.highContrast);
+        btnTeacher.classList.toggle('active', state.teacherMode);
+        btnTeacher.setAttribute('aria-pressed', String(state.teacherMode));
+        btnHint.disabled = !state.teacherMode;
+        btnHint.classList.toggle('active', state.showHint);
+        btnHint.setAttribute('aria-pressed', String(state.showHint));
+      }
+
+      // Floating hint
+      function renderFloatHint(){
+        if(state.showHint && state.teacherMode){
+          floatHint.style.opacity='1';
+          floatHint.style.transform='translateY(0)';
+          floatHint.style.pointerEvents='auto';
+          floatHintText.textContent = '提示：平行四边形的面积 = 底 × 对应高。尝试调整底与高，观察面积变化。';
+        }else{
+          floatHint.style.opacity='0';
+          floatHint.style.transform='translateY(12px)';
+          floatHint.style.pointerEvents='none';
+        }
+      }
+
+      // Grid and HC
+      function renderCanvasBoxSkin(){
+        gridLayer.style.display = state.showGrid ? 'block' : 'none';
+        gridIndicator.textContent = '网格: ' + (state.showGrid ? '显示' : '隐藏');
+        document.body.classList.toggle('hc', state.highContrast);
+      }
+
+      // Shape geometry
+      function getPoints(){
+        const bottomLeft = { x: state.baseLeftX, y: state.baseY };
+        const bottomRight = { x: state.baseLeftX + state.b, y: state.baseY };
+        const topLeft = { x: state.baseLeftX + state.tilt, y: state.baseY - state.h };
+        const topRight = { x: state.baseLeftX + state.tilt + state.b, y: state.baseY - state.h };
+        return { bottomLeft, bottomRight, topLeft, topRight };
+      }
+
+      function computeArea(){ return Math.round(state.b * state.h); }
+
+      // SVG helpers
+      function clearSVG(){
+        while(svg.firstChild) svg.removeChild(svg.firstChild);
+      }
+      function svgEl(tag, attrs = {}, children = []){
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for(const k in attrs){
+          if(attrs[k]!==undefined) el.setAttribute(k, String(attrs[k]));
+        }
+        if(typeof children==='string'){ el.textContent = children; }
+        else children.forEach(ch => el.appendChild(ch));
+        return el;
+      }
+
+      function buildSVG(){
+        clearSVG();
+        svg.setAttribute('viewBox', `0 0 ${state.width} ${state.height}`);
+
+        const { bottomLeft, bottomRight, topLeft, topRight } = getPoints();
+
+        // Parallelogram
+        const polyStr = `${bottomLeft.x},${bottomLeft.y} ${bottomRight.x},${bottomRight.y} ${topRight.x},${topRight.y} ${topLeft.x},${topLeft.y}`;
+        svg.appendChild(svgEl('polygon', {
+          points: polyStr,
+          fill: getComputedStyle(document.body).getPropertyValue('--svg-green-fill').trim() || '#dcedc8',
+          stroke: getComputedStyle(document.body).getPropertyValue('--svg-green').trim() || '#6aa84f',
+          'stroke-width': 2,
+          opacity: (state.stepIndex>=2) ? 0.85 : 1
+        }));
+
+        // base line
+        svg.appendChild(svgEl('line',{
+          x1: bottomLeft.x, y1: bottomLeft.y, x2: bottomRight.x, y2: bottomRight.y,
+          stroke: '#333', 'stroke-width':2
+        }));
+        // base label
+        svg.appendChild(svgEl('text',{
+          x: (bottomLeft.x + bottomRight.x)/2,
+          y: bottomLeft.y + 18,
+          'font-size': 13,
+          'text-anchor': 'middle',
+          fill:'#222'
+        }, `底 = ${state.b}px`));
+
+        // height dashed projection (vertical through topLeft)
+        const projX = topLeft.x;
+        svg.appendChild(svgEl('line', {
+          x1: projX, y1: topLeft.y, x2: projX, y2: bottomLeft.y,
+          stroke:'#ff6f61', 'stroke-width':1.5, 'stroke-dasharray': '6 4'
+        }));
+        svg.appendChild(svgEl('circle', {
+          cx: topLeft.x, cy: topLeft.y, r:3, fill:'#ff6f61'
+        }));
+        svg.appendChild(svgEl('text', {
+          x: projX + 8,
+          y: (topLeft.y + bottomLeft.y)/2,
+          'font-size': 12,
+          fill:'#c62828'
+        }, `高 = ${state.h}px`));
+
+        // Cut triangle (step >=1)
+        // top edge from topLeft to topRight, cut at t=cutT
+        const cutPointTop = { x: topLeft.x + (topRight.x - topLeft.x)*state.cutT, y: topLeft.y + (topRight.y - topLeft.y)*state.cutT };
+        const cutBottomProjected = { x: bottomLeft.x + (cutPointTop.x - topLeft.x), y: bottomLeft.y };
+        const cutTri = [topLeft, cutPointTop, cutBottomProjected];
+        const translationDistance = state.b;
+        const cutTriTranslated = cutTri.map(p => ({ x: p.x + translationDistance*state.translateProgress, y: p.y }));
+
+        if(state.stepIndex >= 1){
+          // original triangle, fades as translate progresses
+          const origPoints = cutTri.map(p => `${p.x},${p.y}`).join(' ');
+          svg.appendChild(svgEl('polygon', {
+            points: origPoints,
+            fill: getComputedStyle(document.body).getPropertyValue('--svg-orange-fill').trim() || '#ffe0b2',
+            stroke: getComputedStyle(document.body).getPropertyValue('--svg-orange').trim() || '#ff8a65',
+            'stroke-width':1.5,
+            opacity: 1 - state.translateProgress
+          }));
+
+          // translated target triangle
+          const transPoints = cutTriTranslated.map(p => `${p.x},${p.y}`).join(' ');
+          svg.appendChild(svgEl('polygon', {
+            points: transPoints,
+            fill: '#fff3e0',
+            stroke: getComputedStyle(document.body).getPropertyValue('--svg-orange').trim() || '#ff8a65',
+            'stroke-width':1.2,
+            opacity: 0.9
+          }));
+
+          // motion arrow (hide at end)
+          const arrowLen = translationDistance * Math.max(0.05, state.translateProgress);
+          if(state.translateProgress < 0.95){
+            const y = cutPointTop.y - 10;
+            // marker
+            const marker = svgEl('marker', { id:'arrowhead', markerWidth:8, markerHeight:8, refX:6, refY:3, orient:'auto' }, [
+              svgEl('path', { d:'M0,0 L6,3 L0,6 L2,3 z', fill:getComputedStyle(document.body).getPropertyValue('--svg-orange').trim() || '#ff8a65' })
+            ]);
+            const defs = svgEl('defs', {}, [marker]);
+            svg.appendChild(defs);
+            svg.appendChild(svgEl('line', {
+              x1: cutPointTop.x, y1: y, x2: cutPointTop.x + arrowLen, y2: y,
+              stroke: getComputedStyle(document.body).getPropertyValue('--svg-orange').trim() || '#ff8a65',
+              'stroke-width':1.2, 'stroke-dasharray':'4 3', 'marker-end':'url(#arrowhead)'
+            }));
+          }
+        }
+
+        // After translation show rectangle overlay representing b*h
+        if(state.translateProgress > 0.01){
+          const rectX = bottomLeft.x;
+          const rectY = bottomLeft.y - state.h;
+          const rectW = state.b;
+          const rectH = state.h;
+          const g = svgEl('g', { opacity: state.translateProgress });
+          g.appendChild(svgEl('rect',{
+            x: rectX, y: rectY, width: rectW, height: rectH,
+            fill: getComputedStyle(document.body).getPropertyValue('--svg-blue-fill').trim() || '#bbdefb',
+            stroke: getComputedStyle(document.body).getPropertyValue('--svg-blue').trim() || '#1976d2',
+            'stroke-width':2
+          }));
+          if(state.rectGridFill){
+            const cols = Math.max(2, Math.floor(rectW/20));
+            const rows = Math.max(2, Math.floor(rectH/20));
+            const gridGroup = svgEl('g', { opacity:0.6 });
+            for(let i=0;i<cols;i++){
+              for(let j=0;j<rows;j++){
+                gridGroup.appendChild(svgEl('rect',{
+                  x: rectX + i*20 + 2,
+                  y: rectY + j*20 + 2,
+                  width: 16, height:16,
+                  fill: (j%2===0?'#e3f2fd':'#bbdefb'),
+                  opacity:0.8
+                }));
+              }
+            }
+            g.appendChild(gridGroup);
+          }
+          svg.appendChild(g);
+        }
+
+        // draggable handles
+        svg.appendChild(svgEl('circle', {
+          cx: topLeft.x, cy: topLeft.y, r:6,
+          fill: (state.dragging==='topLeft') ? '#ff7043' : '#fff',
+          stroke:'#ff7043', 'stroke-width':2
+        }));
+        svg.appendChild(svgEl('circle', {
+          cx: topRight.x, cy: topRight.y, r:6,
+          fill: (state.dragging==='topRight') ? '#ff7043' : '#fff',
+          stroke:'#ff7043', 'stroke-width':2
+        }));
+        const centerX = (topLeft.x + topRight.x)/2;
+        const centerY = (topLeft.y + topRight.y)/2;
+        svg.appendChild(svgEl('rect', {
+          x: centerX - 6, y: centerY - 6, width:12, height:12, rx:2, ry:2,
+          fill: (state.dragging==='topEdge') ? '#ef5350' : '#fff',
+          stroke:'#ef5350', 'stroke-width':2
+        }));
+
+        // step label
+        svg.appendChild(svgEl('text', { x:10, y:20, 'font-size':13, fill:'#333' }, `步骤：${state.stepIndex+1}`));
+      }
+
+      // Render numeric and telemetry
+      function renderNumbers(){
+        lblB.textContent = state.b;
+        lblH.textContent = state.h;
+        lblTilt.textContent = state.tilt;
+        const area = computeArea();
+        areaVal.textContent = `${area} px²`;
+        telemetry.innerHTML = `底 = ${state.b}px, 高 = ${state.h}px, 倾斜 = ${state.tilt}px<br>当前面积（计算） = 底 × 高 = ${state.b} × ${state.h} = ${area} px²`;
+        sliderB.value = state.b;
+        sliderH.value = state.h;
+        sliderTilt.min = (-state.b + 20);
+        sliderTilt.max = (state.b - 20);
+        sliderTilt.value = clamp(state.tilt, +sliderTilt.min, +sliderTilt.max);
+        numBase.value = state.b;
+        numHeight.value = state.h;
+        sliderCut.value = state.cutT;
+        lblCut.textContent = Math.round(state.cutT*100);
+      }
+
+      function renderAll(){
+        renderStepList();
+        renderSubtitle();
+        renderHints();
+        renderToolbar();
+        renderCanvasBoxSkin();
+        renderFloatHint();
+        buildSVG();
+        renderNumbers();
+        
+        // Hide placeholder after user interaction
+        if (state.hasInteracted) {
+          placeholder.classList.add('hidden');
+        }
+      }
+
+      // Animation controls
+      function stopAllAnimations(){
+        state.isPlaying = false;
+        state.isPaused = false;
+        state.timers.forEach(t=>clearTimeout(t));
+        state.timers = [];
+        if(state.rafId){ cancelAnimationFrame(state.rafId); state.rafId = null; }
+      }
+
+      function schedule(fn, delay){
+        const id = setTimeout(fn, delay);
+        state.timers.push(id);
+      }
+
+      function animateTranslateTo(target, durationMs){
+        stopRAFOnly();
+        const start = performance.now();
+        const from = state.translateProgress;
+        const to = target;
+        const duration = durationMs || Math.max(300, 900 / state.speed);
+        function step(now){
+          const t = clamp((now - start) / duration, 0, 1);
+          const e = easeInOut(t);
+          state.translateProgress = lerp(from, to, e);
+          buildSVG();
+          if(t < 1 && state.isPlaying && !state.isPaused){
+            state.rafId = requestAnimationFrame(step);
+          } else if(!state.isPlaying){ /* manual animate */ 
+            if(t<1){ state.rafId = requestAnimationFrame(step); }
+          } else {
+            state.rafId = null;
+          }
+        }
+        // If paused, just set progress and stop; otherwise animate
+        if(!state.isPaused){
+          state.rafId = requestAnimationFrame(step);
+        }
+      }
+
+      function stopRAFOnly(){
+        if(state.rafId){ cancelAnimationFrame(state.rafId); state.rafId = null; }
+      }
+
+      function playAuto(){
+        hidePlaceholder();
+        stopAllAnimations();
+        state.isPlaying = true;
+        state.isPaused = false;
+
+        // Start from current step
+        const stepDur = Math.max(600, 1400 / state.speed);
+
+        function go(step){
+          if(!state.isPlaying) return;
+          state.stepIndex = step;
+          state.activeHint = state.steps[step].summary;
+          if(step===0){
+            state.translateProgress = 0;
+            renderAll();
+            schedule(()=>go(1), stepDur);
+          }else if(step===1){
+            state.translateProgress = 0;
+            renderAll();
+            schedule(()=>go(2), stepDur);
+          }else if(step===2){
+            renderAll();
+            // animate translate
+            const anim = ()=>{
+              if(state.isPaused || !state.isPlaying) return;
+              animateTranslateTo(1, Math.max(500, 1200/state.speed));
+              // after a delay, go next
+              schedule(()=>go(3), Math.max(700, 1400/state.speed));
+            };
+            anim();
+          }else if(step===3){
+            state.translateProgress = 1;
+            renderAll();
+            schedule(()=>go(4), stepDur);
+          }else if(step===4){
+            state.isPlaying = false; // stop at summary
+            renderAll();
+          }
+        }
+        go(state.stepIndex);
+      }
+
+      // SVG interactions (drag)
+      (function initPointer(){
+        let isDown = false;
+        let active = null;
+
+        function toSvgPoint(evt){
+          const pt = svg.createSVGPoint();
+          pt.x = evt.clientX; pt.y = evt.clientY;
+          const ctm = svg.getScreenCTM();
+          if(!ctm) return {x:0,y:0};
+          const inv = ctm.inverse();
+          const p = pt.matrixTransform(inv);
+          return { x: p.x, y: p.y };
+        }
+
+        svg.addEventListener('pointerdown', (e)=>{
+          hidePlaceholder();
+          const pts = getPoints();
+          const p = toSvgPoint(e);
+          const near = (pt)=> dist(pt.x, pt.y, p.x, p.y) < 12;
+          if(near(pts.topLeft)) active='topLeft';
+          else if(near(pts.topRight)) active='topRight';
+          else {
+            // center of top edge
+            const cx = (pts.topLeft.x + pts.topRight.x)/2;
+            const cy = (pts.topLeft.y + pts.topRight.y)/2;
+            if(dist(cx, cy, p.x, p.y) < 12) active='topEdge';
+          }
+          if(active){
+            isDown = true;
+            state.dragging = active;
+            svg.setPointerCapture(e.pointerId);
+            state.activeHint = '请拖动顶点，注意高度是到对边的垂直距离。';
+            addMessage(`开始拖拽：${active}`);
+            buildSVG();
+          }
+        });
+
+        window.addEventListener('pointermove', (e)=>{
+          if(!isDown || !active) return;
+          const p = toSvgPoint(e);
+          const { bottomLeft } = getPoints();
+          if(active==='topLeft'){
+            const newTilt = Math.round(clamp(p.x - bottomLeft.x, -state.b + 20, state.b - 20));
+            state.tilt = newTilt;
+            addMessage('倾斜已改变（左上角）');
+          }else if(active==='topRight'){
+            const desiredTopRightX = p.x;
+            const newTilt = Math.round(desiredTopRightX - bottomLeft.x - state.b);
+            state.tilt = clamp(newTilt, -state.b + 20, state.b - 20);
+            addMessage('倾斜已改变（右上角）');
+          }else if(active==='topEdge'){
+            const newH = Math.round(clamp(bottomLeft.y - p.y, 10, state.baseY - state.margin - 10));
+            state.h = newH;
+            addMessage('高度已改变');
+          }
+          state.activeHint = '实时计算：S = 底 × 高，结果随底/高变动。';
+          syncFromStateToInputs();
+          buildSVG();
+          renderNumbers();
+          renderHints();
+        });
+
+        window.addEventListener('pointerup', (e)=>{
+          if(isDown){
+            isDown=false;
+            state.messages.unshift(`已拖拽 ${active}`);
+            state.dragging=null;
+            state.activeHint = '观察：底是否改变？高度是否保持为垂直距离？';
+            buildSVG();
+            renderHints();
+          }
+        });
+      })();
+
+      // Inputs sync
+      function syncFromStateToInputs(){
+        sliderB.value = state.b;
+        sliderH.value = state.h;
+        sliderTilt.min = (-state.b + 20);
+        sliderTilt.max = (state.b - 20);
+        sliderTilt.value = clamp(state.tilt, +sliderTilt.min, +sliderTilt.max);
+        numBase.value = state.b;
+        numHeight.value = state.h;
+        sliderCut.value = state.cutT;
+        chkGridFill.checked = state.rectGridFill;
+      }
+
+      // Event bindings
+      sliderB.addEventListener('input', ()=>{
+        hidePlaceholder();
+        state.b = +sliderB.value;
+        state.tilt = clamp(state.tilt, -state.b+20, state.b-20);
+        state.activeHint = '实时计算：S = 底 × 高，结果随底/高变动。';
+        syncFromStateToInputs();
+        renderAll();
+      });
+      sliderH.addEventListener('input', ()=>{
+        hidePlaceholder();
+        const maxH = state.baseY - state.margin - 10;
+        state.h = clamp(+sliderH.value, 10, maxH);
+        state.activeHint = '实时计算：S = 底 × 高，结果随底/高变动。';
+        syncFromStateToInputs();
+        renderAll();
+      });
+      sliderTilt.addEventListener('input', ()=>{
+        hidePlaceholder();
+        state.tilt = clamp(+sliderTilt.value, -state.b+20, state.b-20);
+        state.activeHint = '实时计算：S = 底 × 高，结果随底/高变动。';
+        syncFromStateToInputs();
+        renderAll();
+      });
+
+      sliderCut.addEventListener('input', ()=>{
+        hidePlaceholder();
+        state.cutT = +sliderCut.value;
+        lblCut.textContent = Math.round(state.cutT*100);
+        state.activeHint = '尝试不同切割位置，验证拼接后是否总能构成相同矩形。';
+        renderAll();
+      });
+
+      chkGridFill.addEventListener('change', ()=>{
+        hidePlaceholder();
+        state.rectGridFill = chkGridFill.checked;
+        renderAll();
+      });
+
+      btnShowCut.addEventListener('click', ()=>{
+        hidePlaceholder();
+        stopAllAnimations();
+        state.stepIndex = 1;
+        state.translateProgress = 0;
+        state.activeHint = '已显示切割：观察被剪下的三角形。';
+        renderAll();
+      });
+
+      btnTranslate.addEventListener('click', ()=>{
+        hidePlaceholder();
+        stopAllAnimations();
+        state.stepIndex = 2;
+        state.activeHint = '平移拼接：观察如何与剩余部分拼成矩形。';
+        renderAll();
+        animateTranslateTo(1);
+      });
+
+      btnStart.addEventListener('click', ()=>{
+        playAuto();
+        renderToolbar();
+      });
+
+      btnPause.addEventListener('click', ()=>{
+        if(!state.isPlaying){
+          // resume step-specific behavior if user paused before playing; here simply toggle paused view
+          state.isPlaying = true;
+          state.isPaused = false;
+          playAuto();
+          renderToolbar();
+          return;
+        }
+        state.isPaused = !state.isPaused;
+        if(!state.isPaused){
+          // resume
+          playAuto(); // restart flow from current step
+        }else{
+          // pause: stop timers and raf only; keep isPlaying true to resume from current step
+          state.timers.forEach(t=>clearTimeout(t));
+          state.timers=[];
+          stopRAFOnly();
+        }
+        renderToolbar();
+      });
+
+      btnReset.addEventListener('click', ()=>{
+        stopAllAnimations();
+        // reset shape
+        state.b = 300;
+        state.h = 150;
+        state.tilt = 80;
+        state.cutT = 0.25;
+        state.translateProgress = 0;
+        state.stepIndex = 0;
+        state.activeHint = '';
+        state.messages = [];
+        state.hasInteracted = false;
+        placeholder.classList.remove('hidden');
+        syncFromStateToInputs();
+        renderAll();
+      });
+
+      btnPrev.addEventListener('click', ()=>{
+        hidePlaceholder();
+        stopAllAnimations();
+        state.stepIndex = Math.max(0, state.stepIndex - 1);
+        if(state.stepIndex<2) state.translateProgress = 0;
+        state.activeHint = '已退回上一步，可继续观察或提问学生。';
+        renderAll();
+      });
+
+      btnNext.addEventListener('click', ()=>{
+        hidePlaceholder();
+        stopAllAnimations();
+        state.stepIndex = Math.min(state.steps.length-1, state.stepIndex + 1);
+        if(state.stepIndex===2){
+          // animate
+          animateTranslateTo(1);
+        }
+        state.activeHint = '前往下一步：观察并回答引导问题。';
+        renderAll();
+      });
+
+      speedRange.addEventListener('input', ()=>{
+        state.speed = +speedRange.value;
+        renderToolbar();
+      });
+
+      btnToggleGrid.addEventListener('click', ()=>{
+        state.showGrid = !state.showGrid;
+        btnToggleGrid.setAttribute('aria-pressed', String(state.showGrid));
+        renderAll();
+      });
+
+      btnHighContrast.addEventListener('click', ()=>{
+        state.highContrast = !state.highContrast;
+        btnHighContrast.setAttribute('aria-pressed', String(state.highContrast));
+        renderAll();
+      });
+
+      numBase.addEventListener('input', ()=>{
+        hidePlaceholder();
+        const v = clamp(+numBase.value || 40, 40, 400);
+        state.b = v;
+        state.tilt = clamp(state.tilt, -state.b+20, state.b-20);
+        syncFromStateToInputs();
+        state.activeHint = '已修改底。';
+        renderAll();
+      });
+
+      numHeight.addEventListener('input', ()=>{
+        hidePlaceholder();
+        const maxH = state.baseY - state.margin - 10;
+        const v = clamp(+numHeight.value || 10, 10, maxH);
+        state.h = v;
+        syncFromStateToInputs();
+        state.activeHint = '已修改高。';
+        renderAll();
+      });
+
+      btnTeacher.addEventListener('click', ()=>{
+        state.teacherMode = !state.teacherMode;
+        if(!state.teacherMode){ state.showHint = false; }
+        renderAll();
+      });
+
+      btnHint.addEventListener('click', ()=>{
+        if(!state.teacherMode) return;
+        state.showHint = !state.showHint;
+        renderAll();
+      });
+
+      floatClose.addEventListener('click', ()=>{
+        state.showHint = false;
+        renderAll();
+      });
+
+      // Keyboard tips (optional)
+      canvasBox.addEventListener('keydown', (e)=>{
+        if(e.key==='ArrowLeft'){ btnPrev.click(); }
+        if(e.key==='ArrowRight'){ btnNext.click(); }
+        if(e.key===' '){ e.preventDefault(); btnPause.click(); }
+      });
+
+      // Initial render
+      syncFromStateToInputs();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>

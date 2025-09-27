@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>教育几何练习 · 交互逻辑与教学反馈</title>
+  <style>
+    :root{
+      --brand:#2B7AEB;
+      --accent:#F39C12;
+      --ok:#27AE60;
+      --warn:#fa8c16;
+      --err:#e74c3c;
+      --bg:#f7fbff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, Arial, Helvetica, sans-serif;color:#222;background:#f3f6fb}
+    header{
+      height:56px;background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:0 16px
+    }
+    header .title{font-weight:800;font-size:18px}
+    header .sub{margin-left:auto;font-size:13px;opacity:.9}
+    main#app{
+      height:calc(100vh - 56px);
+      display:grid;grid-template-columns:220px 1fr 360px;gap:12px;padding:12px
+    }
+    .panel{
+      background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);padding:12px
+    }
+    #left.panel{display:flex;flex-direction:column;gap:10px}
+    #center.panel{background:var(--bg);display:flex;flex-direction:column}
+    #right.panel{overflow:auto}
+    .toolbar button{
+      background:#fff;border:1px solid #e6eefc;border-radius:6px;padding:8px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px
+    }
+    .toolbar .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .small{font-size:13px;color:#333}
+    .muted{color:#666}
+    .msg{font-size:13px}
+    .msg.info{color:#2c3e50}
+    .msg.warn{color:var(--warn)}
+    .msg.error{color:var(--err)}
+    .kv{font-size:13px}
+    .sectionTitle{font-weight:700;margin:8px 0 6px 0}
+    .hintCard{
+      border:1px solid #ddd;background:#fff;padding:10px;border-radius:6px;width:300px;
+      box-shadow:0 4px 14px rgba(0,0,0,0.06)
+    }
+    .rightGroup{margin-top:12px}
+    .formulaBox{
+      margin-top:6px;padding:8px;border-radius:6px;background:#fff;border:1px solid #eee
+    }
+    .eventsBox{
+      max-height:140px;overflow:auto;padding:6px;border:1px dashed #eee;margin-top:6px;font-size:12px
+    }
+    .badge{
+      padding:2px 6px;border-radius:4px;font-size:12px;display:inline-block
+    }
+    .badge.ok{background:rgba(0,150,60,0.12);color:#0a0}
+    .badge.err{background:rgba(200,0,0,0.06);color:#b00020}
+    .controlsRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .ctrlLabel{display:flex;align-items:center;gap:6px}
+    .split{height:1px;background:#eee;margin:8px 0}
+    .gridLine{stroke:#eef6ff;stroke-width:1}
+    .btn{padding:8px 10px;border:1px solid #e6eefc;border-radius:6px;background:#fff;cursor:pointer}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .paraLabel{font-size:12px;color:#555}
+    .stickyFooter{margin-top:8px;display:flex;gap:12px;align-items:center}
+    @media (max-width:1199px){
+      main#app{grid-template-columns:200px 1fr}
+      #right{display:none}
+    }
+    @media (max-width:767px){
+      main#app{grid-template-columns:1fr}
+      #right{display:none}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="title">教育几何练习</div>
+  <div class="sub">响应式 · 无障碍 · 动画演示</div>
+</header>
+
+<main id="app">
+  <aside id="left" class="panel">
+    <div class="toolbar">
+      <div class="row">
+        <button id="toolSelect">选择</button>
+        <button id="toolVertex">顶点</button>
+        <button id="btnDemo">拼接演示</button>
+        <button id="btnUndo">撤销</button>
+        <button id="btnRedo">重做</button>
+      </div>
+      <div class="row">
+        <button id="btnReset">重置</button>
+        <button id="btnBaseLock">锁定底边</button>
+      </div>
+      <div class="row">
+        <button id="btnCopyLatex">复制 LaTeX</button>
+        <button id="btnSpeak">语音播报</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sectionTitle">示例操作</div>
+      <ul class="small" style="margin:0 0 6px 18px">
+        <li>拖动顶点改变形状</li>
+        <li>箭头键微调（Shift 加大步长）</li>
+      </ul>
+      <div class="controlsRow">
+        <button class="btn" id="btnExampleA">示例 A</button>
+        <button class="btn" id="btnExampleB">示例 B（带动画）</button>
+        <button class="btn" id="btnSnapGrid">吸附网格</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <h4 style="margin:6px 0">教师监控（预览）</h4>
+      <div style="display:grid;gap:8px;margin-top:8px">
+        <div style="padding:8px;border-radius:6px;background:#f6fbf8">
+          <div class="small">在线学生： <span id="teacherOnline">12</span></div>
+          <div style="font-size:12px;color:#666">平均解题时间： <span id="teacherAvg">4m 12s</span></div>
+        </div>
+        <div style="padding:8px;border-radius:6px;background:#fff5f5">
+          <div style="font-size:13px;color:#e74c3c">最近提交错误： 学生#23</div>
+          <div style="font-size:12px;color:#666">错误类型：长度运算错误</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <section id="center" class="panel">
+    <svg id="canvas" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet"
+         style="width:100%;height:100%;border-radius:8px;background:linear-gradient(90deg,#f7fbff,#fff);touch-action:none" aria-label="Geometry Canvas" role="img">
+      <defs>
+        <linearGradient id="areaFill" x1="0" x2="1">
+          <stop offset="0%" stop-color="#27AE60" stop-opacity="0.15"></stop>
+          <stop offset="100%" stop-color="#27AE60" stop-opacity="0.08"></stop>
+        </linearGradient>
+        <linearGradient id="gfill" x1="0" x2="1">
+          <stop offset="0%" stop-color="#ffd"></stop>
+          <stop offset="100%" stop-color="#ffd" stop-opacity="0.6"></stop>
+        </linearGradient>
+      </defs>
+      <g id="grid"></g>
+
+      <polygon id="triPoly" fill="url(#areaFill)" stroke="#2B7AEB" stroke-width="2"></polygon>
+      <line id="baseLine" stroke="#2B7AEB" stroke-width="3"></line>
+      <line id="heightLine" stroke="#F39C12" stroke-width="2" stroke-dasharray="6 6"></line>
+
+      <g id="labels" font-size="13" fill="#111">
+        <text id="labelBase" fill="#2B7AEB" style="font-weight:600"></text>
+        <text id="labelHeight" fill="#F39C12" style="font-weight:600"></text>
+        <text id="labelArea" fill="#27AE60" style="font-weight:700"></text>
+      </g>
+
+      <g id="parallelogram" style="display:none">
+        <polygon id="paraPoly" fill="url(#gfill)" stroke="#fa541c" stroke-width="1.5" opacity="0.9"></polygon>
+      </g>
+
+      <polygon id="animCopy" fill="#ffd6e7" stroke="#eb2f96" stroke-width="1.5" opacity="0.9" style="display:none"></polygon>
+
+      <g id="handles"></g>
+    </svg>
+
+    <div class="stickyFooter">
+      <span class="muted small">Tip: 拖动顶点，方向键微调（Shift 加大步长）</span>
+      <span id="animLock" class="msg warn" style="display:none">演示进行中…控制已锁定</span>
+      <span id="statusMsg" class="msg info" style="margin-left:auto"></span>
+    </div>
+
+    <div class="controlsRow">
+      <button class="btn" id="animStart">拼接演示</button>
+      <button class="btn" id="animPause">暂停</button>
+      <button class="btn" id="animStepBack">后退一步</button>
+      <button class="btn" id="animSkip">跳过</button>
+      <label class="ctrlLabel">速率
+        <input id="animSpeed" type="range" min="0.25" max="3" step="0.25" value="1">
+      </label>
+      <span class="paraLabel" id="animText"></span>
+    </div>
+  </section>
+
+  <aside id="right" class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">步骤与公式</h3>
+      <button id="toggleRight" class="btn">收起</button>
+    </div>
+
+    <div id="rightContent">
+      <div style="margin-top:12px">
+        <div style="font-size:18px;font-weight:700;color:#2B7AEB">Area = 1/2 × base × height</div>
+        <div style="margin-top:8px" id="subsText"></div>
+        <div style="margin-top:8px;font-weight:700" id="areaText"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="font-weight:600;margin-bottom:6px">逐步推导</div>
+        <ol class="small" id="formulaSteps">
+          <li>选取底边 AB 作为 base。</li>
+          <li>从顶点 C 到 AB 作垂线，得到高度 h。</li>
+          <li>计算三角形面积：1/2 × base × height。</li>
+        </ol>
+      </div>
+
+      <div class="controlsRow">
+        <button id="copyLatexR" class="btn">复制 LaTeX</button>
+        <button id="speakR" class="btn">语音播报</button>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="small muted">无障碍提示：可使用键盘选中顶点并微调位置。</div>
+      </div>
+
+      <div class="rightGroup">
+        <h4 style="margin:6px 0">当前数值</h4>
+        <div class="kv">
+          <div>base: <span id="kvBase">-</span></div>
+          <div>height: <span id="kvHeight">-</span></div>
+          <div>area: <span id="kvArea">-</span></div>
+        </div>
+      </div>
+
+      <div class="rightGroup">
+        <h4 style="margin:6px 0">Inspector 参数</h4>
+        <div class="small">精度
+          <select id="selPrecision" style="margin-left:6px">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+          </select>
+          单位
+          <select id="selUnit" style="margin-left:6px">
+            <option value="cm" selected>cm</option>
+            <option value="m">m</option>
+            <option value="mm">mm</option>
+          </select>
+          语音播报
+          <input id="chkVoice" type="checkbox" style="margin-left:6px">
+        </div>
+        <div class="formulaBox" id="formulaBox">Area = 1/2 × base × height</div>
+
+        <div class="split"></div>
+        <div class="small">
+          <div>Base (px) <input id="inBase" type="number" step="any" style="width:120px"></div>
+          <div>Height (px) <input id="inHeight" type="number" step="any" style="width:120px"></div>
+          <div class="controlsRow">
+            <button id="btnApplyParams" class="btn">应用参数</button>
+            <button id="btnSyncParams" class="btn">同步到当前</button>
+          </div>
+        </div>
+
+        <div class="split"></div>
+        <div class="small">
+          <div style="font-weight:600;margin-bottom:4px">提交你的答案</div>
+          <div class="controlsRow">
+            <input id="inSubmitVal" type="number" step="any" placeholder="输入数值" style="width:120px">
+            <select id="selSubmitUnit">
+              <option value="">(单位)</option>
+              <option value="cm">cm</option>
+              <option value="m">m</option>
+              <option value="mm">mm</option>
+            </select>
+            <button id="btnSubmit" class="btn">提交</button>
+          </div>
+          <div id="submitMsg" class="msg" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="rightGroup">
+        <h4 style="margin:6px 0">记录与统计</h4>
+        <div class="small">Hint 已使用：<span id="statHint">0</span></div>
+        <div class="small">提交尝试：<span id="statAttempts">0</span></div>
+        <div class="small">记录条数（教师端）：<span id="statRecords">0</span></div>
+        <div class="controlsRow">
+          <button id="btnSaveLocal" class="btn">本地保存（缓存）</button>
+          <button id="btnLoadLocal" class="btn">恢复本地缓存</button>
+        </div>
+      </div>
+
+      <div class="rightGroup">
+        <h4 style="margin:6px 0">教师端监控</h4>
+        <div class="small">实时学生记录（模拟单个学生）</div>
+        <div class="controlsRow">
+          <button id="btnReplay" class="btn">回放操作</button>
+          <button id="btnExportCSV" class="btn">导出 CSV</button>
+          <button id="btnExportJSON" class="btn">导出 JSON</button>
+        </div>
+        <div class="split"></div>
+        <div class="small">事件流预览（最近 10 条）</div>
+        <div id="eventsBox" class="eventsBox"></div>
+      </div>
+
+      <div class="rightGroup">
+        <h4 style="margin:6px 0">容错 & 提示</h4>
+        <div class="small">最小高度阈值：<span id="minH">6</span> px</div>
+        <div class="small">若检测到共线或高度过小，系统会自动微调或回退（可撤销）。</div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- 提示卡片（覆盖在画布旁） -->
+<div id="hintOverlay" style="display:none;position:absolute;left:28px;top:300px;z-index:10">
+  <div class="hintCard">
+    <div style="font-weight:600;margin-bottom:6px">提示 (Hint)</div>
+    <div class="small" style="margin-bottom:8px">
+      1) 尝试镜像拼接：将当前三角形镜像拼接可见平行四边形，从而理解 Area_triangle = 1/2 Area_parallelogram。
+    </div>
+    <div class="small" style="margin-bottom:8px">
+      2) 若高度过小，系统会指示可安全移动方向（绿色阴影）。还可以打开网格帮助精确放置。
+    </div>
+    <div class="controlsRow">
+      <button id="btnHintMirror" class="btn">试一试（镜像演示）</button>
+      <button id="btnHintGrid" class="btn">打开网格</button>
+      <button id="btnHintClose" class="btn">关闭</button>
+    </div>
+    <div style="margin-top:8px;font-size:12px;color:#666">已使用提示：<span id="hintCount">0</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const vec = (a,b)=>({x:b.x-a.x,y:b.y-a.y});
+  const dot = (u,v)=>u.x*v.x+u.y*v.y;
+  const cross=(u,v)=>u.x*v.y-u.y*v.x;
+  const len=v=>Math.hypot(v.x,v.y);
+  const add=(a,b)=>({x:a.x+b.x,y:a.y+b.y});
+  const sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y});
+  const mul=(v,s)=>({x:v.x*s,y:v.y*s});
+  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const nearlyEqual=(a,b,eps=1e-6)=>Math.abs(a-b)<eps;
+  const nowISO=()=>new Date().toISOString();
+  const uid=()=>Math.random().toString(36).slice(2,9);
+
+  // Elements
+  const svg = document.getElementById('canvas');
+  const gridG = document.getElementById('grid');
+  const triPoly = document.getElementById('triPoly');
+  const baseLine = document.getElementById('baseLine');
+  const heightLine = document.getElementById('heightLine');
+  const labelsG = document.getElementById('labels');
+  const labelBase = document.getElementById('labelBase');
+  const labelHeight = document.getElementById('labelHeight');
+  const labelArea = document.getElementById('labelArea');
+  const handlesG = document.getElementById('handles');
+  const paraG = document.getElementById('parallelogram');
+  const paraPoly = document.getElementById('paraPoly');
+  const animCopyPoly = document.getElementById('animCopy');
+  const animLock = document.getElementById('animLock');
+  const statusMsg = document.getElementById('statusMsg');
+
+  const toolSelect = document.getElementById('toolSelect');
+  const toolVertex = document.getElementById('toolVertex');
+  const btnDemo = document.getElementById('btnDemo');
+  const btnUndo = document.getElementById('btnUndo');
+  const btnRedo = document.getElementById('btnRedo');
+  const btnReset = document.getElementById('btnReset');
+  const btnBaseLock = document.getElementById('btnBaseLock');
+  const btnCopyLatex = document.getElementById('btnCopyLatex');
+  const btnSpeak = document.getElementById('btnSpeak');
+  const btnExampleA = document.getElementById('btnExampleA');
+  const btnExampleB = document.getElementById('btnExampleB');
+  const btnSnapGrid = document.getElementById('btnSnapGrid');
+
+  const animStart = document.getElementById('animStart');
+  const animPause = document.getElementById('animPause');
+  const animStepBack = document.getElementById('animStepBack');
+  const animSkip = document.getElementById('animSkip');
+  const animSpeed = document.getElementById('animSpeed');
+  const animText = document.getElementById('animText');
+
+  const toggleRight = document.getElementById('toggleRight');
+  const rightContent = document.getElementById('rightContent');
+
+  const subsText = document.getElementById('subsText');
+  const areaText = document.getElementById('areaText');
+  const copyLatexR = document.getElementById('copyLatexR');
+  const speakR = document.getElementById('speakR');
+  const kvBase = document.getElementById('kvBase');
+  const kvHeight = document.getElementById('kvHeight');
+  const kvArea = document.getElementById('kvArea');
+
+  const selPrecision = document.getElementById('selPrecision');
+  const selUnit = document.getElementById('selUnit');
+  const chkVoice = document.getElementById('chkVoice');
+  const formulaBox = document.getElementById('formulaBox');
+
+  const inBase = document.getElementById('inBase');
+  const inHeight = document.getElementById('inHeight');
+  const btnApplyParams = document.getElementById('btnApplyParams');
+  const btnSyncParams = document.getElementById('btnSyncParams');
+
+  const inSubmitVal = document.getElementById('inSubmitVal');
+  const selSubmitUnit = document.getElementById('selSubmitUnit');
+  const btnSubmit = document.getElementById('btnSubmit');
+  const submitMsg = document.getElementById('submitMsg');
+  const statHint = document.getElementById('statHint');
+  const statAttempts = document.getElementById('statAttempts');
+  const statRecords = document.getElementById('statRecords');
+  const btnSaveLocal = document.getElementById('btnSaveLocal');
+  const btnLoadLocal = document.getElementById('btnLoadLocal');
+  const btnReplay = document.getElementById('btnReplay');
+  const btnExportCSV = document.getElementById('btnExportCSV');
+  const btnExportJSON = document.getElementById('btnExportJSON');
+  const eventsBox = document.getElementById('eventsBox');
+  const minH = document.getElementById('minH');
+
+  const hintOverlay = document.getElementById('hintOverlay');
+  const btnHintMirror = document.getElementById('btnHintMirror');
+  const btnHintGrid = document.getElementById('btnHintGrid');
+  const btnHintClose = document.getElementById('btnHintClose');
+  const hintCountEl = document.getElementById('hintCount');
+
+  // IndexedDB simple logger
+  const dbRef = { db: null };
+  (function openDB(){
+    try{
+      const req = indexedDB.open('interactionLogsDB', 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if(!db.objectStoreNames.contains('logs')){
+          db.createObjectStore('logs', { keyPath:'id', autoIncrement:true });
+        }
+      };
+      req.onsuccess = ()=> dbRef.db = req.result;
+      req.onerror = ()=> console.warn('IndexedDB open error', req.error);
+    }catch(e){ console.warn('IndexedDB unavailable'); }
+  })();
+
+  function addLog(entry){
+    const db = dbRef.db;
+    if(!db) return;
+    try{
+      const tx = db.transaction('logs','readwrite');
+      tx.objectStore('logs').add(entry);
+    }catch(e){}
+  }
+
+  // App state
+  const State = { IDLE:'Idle', EDITING:'Editing', ANIMATING:'Animating', SUBMITTED:'Submitted', REVIEW:'Review' };
+  const machine = {
+    state: State.IDLE,
+    logs: [],
+    transition(to, meta={}){
+      const entry = { from:this.state, to, ts:Date.now(), meta };
+      this.state = to;
+      this.logs.push(entry);
+      addLog(entry);
+      renderStatus();
+    }
+  };
+
+  const MIN_HEIGHT = 6;
+  minH.textContent = MIN_HEIGHT;
+
+  const app = {
+    vertices: [
+      {x:200,y:400}, // A
+      {x:500,y:420}, // B
+      {x:300,y:150}  // C
+    ],
+    baseIdx:[0,1],
+    baseLocked:false,
+    selectedIdx:null,
+    tool:'vertex',
+    gridOn:true,
+    precision:2,
+    unit:'cm',
+    voice:false,
+    submitVal:'',
+    submitUnit:'',
+    attempts:0,
+    hintCount:0,
+    records:[],
+    events:[],
+    sessionStart: Date.now(),
+    // animation
+    anim:{ running:false, paused:false, speed:1, progress:0, duration:1200, raf:0, onComplete:null, startPts:null, endPts:null },
+    // history
+    history:[],
+    historyIdx:-1,
+    // dragging
+    dragging:{ active:false, pointerId:null, idx:null, latest:null },
+    // messages
+    message:null,
+    // parallelogram flag
+    showParallelogram:false,
+  };
+
+  function pushEvent(type, payload={}){
+    const ev = { type, payload, timestamp: nowISO() };
+    app.events.push(ev);
+    renderEvents();
+  }
+
+  function triangleArea(pts){
+    const [A,B,C]=pts;
+    return Math.abs(cross(vec(A,B), vec(A,C)))/2;
+  }
+
+  function computeBaseHeight(pts, baseIdx){
+    const [i,j]=baseIdx;
+    const A=pts[i], B=pts[j];
+    const k=[0,1,2].find(t=>t!==i&&t!==j);
+    const P=pts[k];
+    const bV = vec(A,B);
+    const baseLength = len(bV);
+    const h = Math.abs(cross(bV, vec(A,P))) / (baseLength||1);
+    // foot
+    const bU = mul(bV, 1/(baseLength||1));
+    const AP = vec(A,P);
+    const proj = dot(AP,bU);
+    const foot = add(A, mul(bU, proj));
+    return { baseLength, height:h, A,B,P, apexIdx:k, foot };
+  }
+
+  function isCollinear(pts){
+    return nearlyEqual(triangleArea(pts), 0);
+  }
+
+  function autoCorrectCollinear(pts, apexIdx, offset=14){
+    const [i,j]=app.baseIdx;
+    const A=pts[i], B=pts[j];
+    const baseV = vec(A,B);
+    const n = {x:-baseV.y,y:baseV.x};
+    const nlen = len(n)||1;
+    const norm = mul(n, offset/nlen);
+    const newPts = pts.map(p=>({ ...p }));
+    newPts[apexIdx] = add(newPts[apexIdx], norm);
+    return newPts;
+  }
+
+  function formatNumber(v, precision){ return Number.isFinite(v)? v.toFixed(precision):'—'; }
+
+  function clientToSvg(x,y){
+    const pt = svg.createSVGPoint();
+    pt.x=x; pt.y=y;
+    const ctm = svg.getScreenCTM();
+    if(!ctm) return {x,y};
+    const loc = pt.matrixTransform(ctm.inverse());
+    return { x:loc.x, y:loc.y };
+  }
+
+  function setMessage(type,text){
+    app.message = { type, text };
+    statusMsg.className = 'msg ' + (type==='warn'?'warn':type==='error'?'error':'info');
+    statusMsg.textContent = text || '';
+  }
+
+  // History
+  function pushHistory(note=''){
+    const snapshot = {
+      vertices: JSON.parse(JSON.stringify(app.vertices)),
+      baseIdx: [...app.baseIdx],
+      baseLocked: app.baseLocked,
+      note, ts:Date.now()
+    };
+    app.history = app.history.slice(0, app.historyIdx+1);
+    app.history.push(snapshot);
+    app.historyIdx++;
+  }
+  function undo(){
+    if(app.historyIdx<=0) return;
+    app.historyIdx--;
+    const s=app.history[app.historyIdx];
+    app.vertices = JSON.parse(JSON.stringify(s.vertices));
+    app.baseIdx = [...s.baseIdx];
+    app.baseLocked = s.baseLocked;
+    setMessage('info','已撤销');
+    pushEvent('undo',{});
+    renderAll();
+  }
+  function redo(){
+    if(app.historyIdx>=app.history.length-1) return;
+    app.historyIdx++;
+    const s=app.history[app.historyIdx];
+    app.vertices = JSON.parse(JSON.stringify(s.vertices));
+    app.baseIdx = [...s.baseIdx];
+    app.baseLocked = s.baseLocked;
+    setMessage('info','已重做');
+    pushEvent('redo',{});
+    renderAll();
+  }
+  function resetAll(){
+    app.vertices = [{x:200,y:400},{x:500,y:420},{x:300,y:150}];
+    app.baseIdx=[0,1];
+    app.baseLocked=false;
+    app.selectedIdx=null;
+    app.tool='vertex';
+    app.anim.running=false; cancelAnimationFrame(app.anim.raf||0);
+    app.anim.paused=false; app.anim.progress=0;
+    app.showParallelogram=false;
+    app.history=[]; app.historyIdx=-1; pushHistory('reset');
+    setMessage('info','已重置');
+    pushEvent('reset',{});
+    renderAll();
+  }
+
+  // Rendering grid
+  function renderGrid(){
+    gridG.innerHTML='';
+    if(!app.gridOn) return;
+    const frag = document.createDocumentFragment();
+    for(let i=0;i<=800;i+=40){
+      const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+      l.setAttribute('x1', i); l.setAttribute('y1', 0);
+      l.setAttribute('x2', i); l.setAttribute('y2', 600);
+      l.setAttribute('class','gridLine');
+      frag.appendChild(l);
+    }
+    for(let j=0;j<=600;j+=40){
+      const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+      l.setAttribute('x1', 0); l.setAttribute('y1', j);
+      l.setAttribute('x2', 800); l.setAttribute('y2', j);
+      l.setAttribute('class','gridLine');
+      frag.appendChild(l);
+    }
+    gridG.appendChild(frag);
+  }
+
+  function ptsToStr(pts){ return pts.map(p=>`${p.x},${p.y}`).join(' '); }
+
+  // Render triangle and labels
+  function renderCanvas(){
+    const pts = app.vertices;
+    triPoly.setAttribute('points', ptsToStr(pts));
+    const { baseLength, height, A, B, P, apexIdx, foot } = computeBaseHeight(pts, app.baseIdx);
+
+    baseLine.setAttribute('x1', A.x); baseLine.setAttribute('y1', A.y);
+    baseLine.setAttribute('x2', B.x); baseLine.setAttribute('y2', B.y);
+
+    heightLine.setAttribute('x1', P.x); heightLine.setAttribute('y1', P.y);
+    heightLine.setAttribute('x2', foot.x); heightLine.setAttribute('y2', foot.y);
+
+    const baseMid = { x:(A.x+B.x)/2, y:(A.y+B.y)/2 };
+    const area = 0.5*baseLength*height;
+
+    labelBase.setAttribute('x', baseMid.x + 8);
+    labelBase.setAttribute('y', baseMid.y - 8);
+    labelBase.textContent = 'base = ' + baseLength.toFixed(2);
+
+    const hLabelX = (P.x+foot.x)/2 + 12;
+    const hLabelY = (P.y+foot.y)/2 - 6;
+    labelHeight.setAttribute('x', hLabelX);
+    labelHeight.setAttribute('y', hLabelY);
+    labelHeight.textContent = 'h = ' + height.toFixed(2);
+
+    labelArea.setAttribute('x', baseMid.x - 40);
+    labelArea.setAttribute('y', baseMid.y + 20);
+    labelArea.textContent = 'Area = ' + area.toFixed(2);
+
+    // handles
+    handlesG.innerHTML='';
+    pts.forEach((p,i)=>{
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+
+      const hit = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      hit.setAttribute('cx', p.x); hit.setAttribute('cy', p.y); hit.setAttribute('r', 14);
+      hit.setAttribute('fill','transparent');
+      hit.style.cursor = (app.baseLocked && (i===app.baseIdx[0]||i===app.baseIdx[1])) ? 'not-allowed' : 'grab';
+      hit.addEventListener('pointerdown', (e)=> onVertexDown(e,i));
+      g.appendChild(hit);
+
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 6);
+      c.setAttribute('fill', (i===0||i===1)? '#2B7AEB':'#F39C12');
+      c.setAttribute('stroke','#fff'); c.setAttribute('stroke-width','2');
+      c.style.pointerEvents = 'none';
+      g.appendChild(c);
+
+      const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+      label.setAttribute('x', p.x+8); label.setAttribute('y', p.y-8);
+      label.setAttribute('fill','#333'); label.setAttribute('font-size','12');
+      label.textContent = ['A','B','C'][i];
+      g.appendChild(label);
+
+      handlesG.appendChild(g);
+    });
+
+    // parallelogram fill if shown
+    if(app.showParallelogram){
+      const [i,j]=app.baseIdx;
+      const k=[0,1,2].find(t=>t!==i&&t!==j);
+      const A2=pts[i], B2=pts[j], P2=pts[k];
+      const baseV = vec(A2,B2), L=len(baseV)||1, bU=mul(baseV,1/L), n={x:-bU.y,y:bU.x};
+      const AP = vec(A2,P2), along=dot(AP,bU), across=dot(AP,n);
+      const Pref = add(A2, add(mul(bU,along), mul(n,-across)));
+      const Ptrans = add(Pref, baseV);
+      paraPoly.setAttribute('points', ptsToStr([A2,B2,Ptrans,P2]));
+      paraG.style.display='';
+    }else{
+      paraG.style.display='none';
+    }
+  }
+
+  function renderRight(){
+    const { baseLength, height } = computeBaseHeight(app.vertices, app.baseIdx);
+    const area = 0.5*baseLength*height;
+    const p = app.precision; const unit = app.unit;
+
+    subsText.textContent = '代入当前数值： base = ' + baseLength.toFixed(2) + ', height = ' + height.toFixed(2);
+    areaText.textContent = 'Area = ' + area.toFixed(2) + ' (单位²)';
+
+    kvBase.textContent = baseLength.toFixed(p);
+    kvHeight.textContent = height.toFixed(p);
+    kvArea.textContent = area.toFixed(p);
+
+    formulaBox.textContent = app._formulaStep===0
+      ? 'Area = 1/2 × base × height'
+      : app._formulaStep===1
+        ? ('Area = 1/2 × ' + baseLength.toFixed(p) + ' ' + unit + ' × ' + height.toFixed(p) + ' ' + unit)
+        : ('Area = ' + (0.5*baseLength*height).toFixed(p) + ' ' + unit + '²');
+
+    if(app.voice){
+      try{
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance('当前面积 ' + (0.5*baseLength*height).toFixed(p) + ' ' + (app.submitUnit||unit));
+        window.speechSynthesis.speak(msg);
+      }catch(e){}
+    }
+  }
+
+  function renderEvents(){
+    const last10 = app.events.slice(-10);
+    eventsBox.innerHTML = last10.map(ev=>'['+ev.timestamp+'] '+ev.type+' '+JSON.stringify(ev.payload)).join('<br/>');
+  }
+
+  function renderStatus(){
+    // optional reflect state in UI
+  }
+
+  function renderAll(){
+    renderGrid();
+    renderCanvas();
+    renderRight();
+    statHint.textContent = app.hintCount;
+    statAttempts.textContent = app.attempts;
+    statRecords.textContent = app.records.length;
+  }
+
+  function updateFormulaSteps(){
+    app._formulaStep = 0;
+    renderRight();
+    setTimeout(()=>{ app._formulaStep=1; renderRight(); }, 300);
+    setTimeout(()=>{ app._formulaStep=2; renderRight(); }, 800);
+  }
+
+  // Dragging
+  function onVertexDown(e, idx){
+    if(app.anim.running) return;
+    if(app.baseLocked && (idx===app.baseIdx[0] || idx===app.baseIdx[1])) return;
+    const p = clientToSvg(e.clientX,e.clientY);
+    app.dragging.active=true;
+    app.dragging.pointerId=e.pointerId;
+    app.dragging.idx=idx;
+    app.dragging.latest=p;
+    svg.setPointerCapture(e.pointerId);
+    app.selectedIdx=idx;
+    pushHistory('dragStart');
+    machine.transition(State.EDITING,{reason:'vertex_drag_start',vertex:idx});
+    pushEvent('dragStart',{ index:idx, pos:app.vertices[idx] });
+    if(!app.dragging.raf) app.dragging.raf = requestAnimationFrame(dragLoop);
+  }
+
+  function onPointerMove(e){
+    if(!app.dragging.active || e.pointerId!==app.dragging.pointerId) return;
+    app.dragging.latest = clientToSvg(e.clientX,e.clientY);
+  }
+
+  function onPointerUp(e){
+    if(!app.dragging.active) return;
+    try{ svg.releasePointerCapture(app.dragging.pointerId); }catch(err){}
+    app.dragging.active=false;
+    cancelAnimationFrame(app.dragging.raf||0);
+    app.dragging.raf=0;
+
+    // validation
+    const pts = app.vertices;
+    if(isCollinear(pts)){
+      const apexIdx = [0,1,2].find(k=>!app.baseIdx.includes(k));
+      app.vertices = autoCorrectCollinear(pts, apexIdx, 14);
+      pushHistory('autoCorrectCollinear');
+      pushEvent('autoCorrect',{ apexIdx });
+      setMessage('error','检测到三点共线（退化三角形），已自动微调。');
+      renderAll();
+    }else{
+      const { height } = computeBaseHeight(pts, app.baseIdx);
+      if(height < MIN_HEIGHT){
+        setMessage('warn','高度过小，已回退到最近合法位置。');
+        // revert last
+        if(app.historyIdx>=0){
+          const last = app.history[app.historyIdx];
+          app.historyIdx = Math.max(0, app.historyIdx-1);
+          const back = app.history[app.historyIdx];
+          if(back){
+            app.vertices = JSON.parse(JSON.stringify(back.vertices));
+            renderAll();
+          }
+        }
+        pushEvent('heightTooSmall',{});
+      }else{
+        setMessage('info','拖拽完成');
+        pushEvent('dragEnd',{ index: app.dragging.idx, pos: app.vertices[app.dragging.idx] });
+      }
+    }
+    machine.transition(State.IDLE,{reason:'vertex_drag_end', vertex: app.dragging.idx});
+    app.selectedIdx=null;
+    updateFormulaSteps();
+  }
+
+  function dragLoop(){
+    if(!app.dragging.active) { app.dragging.raf=0; return; }
+    const idx=app.dragging.idx; const p=app.dragging.latest;
+    if(typeof idx==='number' && p){
+      const pts = app.vertices.map(q=>({...q}));
+      if(app.baseLocked && (idx===app.baseIdx[0] || idx===app.baseIdx[1])){
+        const otherIdx = (idx===app.baseIdx[0])? app.baseIdx[1]: app.baseIdx[0];
+        const A=pts[otherIdx], B=pts[idx];
+        const lineV = vec(A,B);
+        const AP = vec(A,p);
+        const proj = dot(AP,lineV)/(dot(lineV,lineV)||1);
+        const newPos = add(A, mul(lineV, proj));
+        pts[idx] = newPos;
+      }else{
+        pts[idx] = p;
+      }
+      if(!isCollinear(pts)){
+        app.vertices = pts;
+        pushEvent('dragMove',{ index:idx, pos:p });
+        renderCanvas();
+        renderRight();
+      }else{
+        setMessage('error','将导致三点共线，操作受限');
+      }
+    }
+    app.dragging.raf = requestAnimationFrame(dragLoop);
+  }
+
+  svg.addEventListener('pointermove', onPointerMove);
+  svg.addEventListener('pointerup', onPointerUp);
+  svg.addEventListener('pointercancel', onPointerUp);
+
+  // Keyboard micro-adjust
+  window.addEventListener('keydown', (e)=>{
+    if(app.selectedIdx==null || app.anim.running) return;
+    const step = e.shiftKey?10:1;
+    const map = { ArrowLeft:{x:-step,y:0}, ArrowRight:{x:step,y:0}, ArrowUp:{x:0,y:-step}, ArrowDown:{x:0,y:step} };
+    const d = map[e.key];
+    if(d){
+      const pts = app.vertices.map((p,i)=> i===app.selectedIdx? add(p,d): {...p});
+      app.vertices = pts;
+      pushHistory('keyboardAdjust');
+      pushEvent('keyboardAdjust',{ vertex: app.selectedIdx, delta: d });
+      renderAll();
+      e.preventDefault();
+    }
+  });
+
+  // Tools and buttons
+  toolSelect.addEventListener('click', ()=>{ app.tool='select'; setMessage('info','工具：选择'); });
+  toolVertex.addEventListener('click', ()=>{ app.tool='vertex'; setMessage('info','工具：顶点'); });
+  btnReset.addEventListener('click', resetAll);
+  btnUndo.addEventListener('click', undo);
+  btnRedo.addEventListener('click', redo);
+  btnBaseLock.addEventListener('click', ()=>{
+    app.baseLocked=!app.baseLocked;
+    btnBaseLock.textContent = app.baseLocked? '解锁底边':'锁定底边';
+    pushEvent('baseLockToggle',{ locked:app.baseLocked });
+    machine.transition(State.IDLE,{reason:'base_lock_toggle',locked:app.baseLocked});
+  });
+  btnCopyLatex.addEventListener('click', copyLatex);
+  btnSpeak.addEventListener('click', speakFormula);
+  copyLatexR.addEventListener('click', copyLatex);
+  speakR.addEventListener('click', speakFormula);
+
+  btnExampleA.addEventListener('click', ()=>{
+    app.vertices = [{x:140,y:300},{x:320,y:300},{x:220,y:210}];
+    setMessage('info','示例 A 已加载：base≈180px height≈90px');
+    pushEvent('exampleA',{});
+    pushHistory('exampleA');
+    renderAll();
+    updateFormulaSteps();
+  });
+  btnExampleB.addEventListener('click', ()=>{
+    btnExampleA.click();
+    setTimeout(()=> startSpliceAnimation({ duration:1400, speed:1 }), 400);
+    pushEvent('exampleB',{});
+  });
+
+  btnSnapGrid.addEventListener('click', ()=>{
+    const g=20;
+    app.vertices = app.vertices.map(p=>({ x:Math.round(p.x/g)*g, y:Math.round(p.y/g)*g }));
+    setMessage('info','已吸附到网格');
+    pushEvent('alignToGrid',{ grid:g });
+    pushHistory('alignToGrid');
+    renderAll();
+  });
+
+  btnDemo.addEventListener('click', ()=> startSpliceAnimation({ duration:1200, speed: Number(animSpeed.value||1) }) );
+
+  // Animation
+  function startSpliceAnimation(opts={}){
+    if(app.anim.running) return;
+    const speed = opts.speed||1;
+    const duration = (opts.duration||1200)/speed;
+    const pts = app.vertices.map(p=>({...p}));
+    const [i,j]=app.baseIdx;
+    const k=[0,1,2].find(t=>t!==i&&t!==j);
+    const A=pts[i], B=pts[j], P=pts[k];
+    const baseV = vec(A,B), L=len(baseV)||1, bU=mul(baseV,1/L), n={x:-bU.y,y:bU.x};
+
+    const mirrored = pts.map(p=>{
+      const AP = vec(A,p);
+      const along=dot(AP,bU), across=dot(AP,n);
+      const pref = add(A, add(mul(bU,along), mul(n,-across)));
+      return pref;
+    });
+    const translated = mirrored.map(p=>add(p, baseV));
+
+    app.anim.running=true;
+    app.anim.paused=false;
+    app.anim.speed=speed;
+    app.anim.progress=0;
+    app.anim.duration=duration;
+    app.anim.startPts = pts;
+    app.anim.endPts = translated;
+    app.anim.onComplete = ()=>{
+      app.anim.running=false;
+      app.showParallelogram=true;
+      animLock.style.display='none';
+      animText.textContent = '动画完成：2×Area_triangle = Area_parallelogram';
+      pushEvent('animationEnd',{});
+      machine.transition(State.IDLE,{reason:'animation_end'});
+      renderAll();
+    };
+    machine.transition(State.ANIMATING,{reason:'splice_start'});
+    pushEvent('animateStart',{ type:'splice' });
+    animLock.style.display='inline';
+    animCopyPoly.style.display='';
+    app.showParallelogram=false;
+    stepAnim();
+  }
+
+  function stepAnim(){
+    if(!app.anim.running) return;
+    if(app.anim.paused){ app.anim.raf = requestAnimationFrame(stepAnim); return; }
+    const t = app.anim.progress + (16/app.anim.duration);
+    app.anim.progress = Math.min(1, t);
+    const interp = app.anim.startPts.map((p,idx)=>{
+      const e = app.anim.endPts[idx];
+      return { x: p.x + (e.x-p.x)*app.anim.progress, y: p.y + (e.y-p.y)*app.anim.progress };
+    });
+    animCopyPoly.setAttribute('points', ptsToStr(interp));
+    animText.textContent = '拼接演示中... ' + Math.round(app.anim.progress*100) + '%';
+    if(app.anim.progress>=1){
+      animCopyPoly.style.display='none';
+      app.anim.onComplete && app.anim.onComplete();
+    }else{
+      app.anim.raf = requestAnimationFrame(stepAnim);
+    }
+  }
+
+  animStart.addEventListener('click', ()=> startSpliceAnimation({ duration:1200, speed:Number(animSpeed.value||1) }) );
+  animPause.addEventListener('click', ()=>{
+    if(!app.anim.running) return;
+    app.anim.paused = !app.anim.paused;
+    animPause.textContent = app.anim.paused? '继续':'暂停';
+    pushEvent(app.anim.paused?'animPause':'animResume',{});
+  });
+  animStepBack.addEventListener('click', ()=>{
+    if(!app.anim.running) return;
+    app.anim.progress = Math.max(0, app.anim.progress - 0.1);
+    pushEvent('animStepBack',{ progress: app.anim.progress });
+  });
+  animSkip.addEventListener('click', ()=>{
+    if(!app.anim.running) return;
+    cancelAnimationFrame(app.anim.raf||0);
+    app.anim.running=false;
+    animCopyPoly.style.display='none';
+    app.showParallelogram=true;
+    animLock.style.display='none';
+    animText.textContent = '动画完成：2×Area_triangle = Area_parallelogram';
+    pushEvent('animSkip',{});
+    machine.transition(State.IDLE,{reason:'animation_end_skip'});
+    renderAll();
+  });
+  animSpeed.addEventListener('change', ()=> pushEvent('animSpeed',{ speed:Number(animSpeed.value) }) );
+
+  // Parameters apply
+  btnSyncParams.addEventListener('click', ()=>{
+    const { baseLength, height } = computeBaseHeight(app.vertices, app.baseIdx);
+    inBase.value = Math.round(baseLength);
+    inHeight.value = Math.round(height);
+  });
+  btnApplyParams.addEventListener('click', ()=>{
+    const inputBase = Number(inBase.value);
+    const inputHeight = Number(inHeight.value);
+    if(!(inputBase>0 && inputHeight>0)){ setMessage('error','请输入正数的 base/height'); return; }
+    const [i,j]=app.baseIdx;
+    const k=[0,1,2].find(t=>t!==i&&t!==j);
+    const A=app.vertices[i], B=app.vertices[j];
+    const dir = vec(A,B), L=len(dir)||1, dirN=mul(dir,1/L);
+    const newB = add(A, mul(dirN, inputBase));
+    const normal = { x:-dirN.y, y:dirN.x };
+    const newP = add(A, mul(normal, inputHeight));
+    const newPts = app.vertices.map((p,idx)=> idx===i? {...A}: idx===j? newB: newP);
+    app.vertices = newPts;
+    pushHistory('applyParams');
+    pushEvent('applyParams',{ base:inputBase, height:inputHeight });
+    setMessage('info','已根据参数更新顶点位置');
+    renderAll();
+    updateFormulaSteps();
+  });
+
+  // Copy latex & speak
+  function copyLatex(){
+    const { baseLength, height } = computeBaseHeight(app.vertices, app.baseIdx);
+    const area = 0.5*baseLength*height;
+    const latex = '\\text{Area}_{triangle} = \\frac{1}{2} \\times ' + baseLength.toFixed(2) + ' \\times ' + height.toFixed(2) + ' = ' + area.toFixed(2);
+    navigator.clipboard.writeText(latex).then(()=> alert('LaTeX 已复制到剪贴板')).catch(()=> alert('复制失败'));
+  }
+  function speakFormula(){
+    const { baseLength, height } = computeBaseHeight(app.vertices, app.baseIdx);
+    const area = 0.5*baseLength*height;
+    try{
+      const s = new SpeechSynthesisUtterance('当前三角形的底为 '+baseLength.toFixed(2)+'，高为 '+height.toFixed(2)+'，面积为 '+area.toFixed(2)+' 平方单位。');
+      window.speechSynthesis.speak(s);
+    }catch(e){}
+  }
+
+  // Right panel toggler
+  let rightExpanded = true;
+  toggleRight.addEventListener('click', ()=>{
+    rightExpanded = !rightExpanded;
+    rightContent.style.display = rightExpanded? 'block':'none';
+    toggleRight.textContent = rightExpanded? '收起':'展开';
+  });
+
+  // Precision / unit / voice
+  selPrecision.addEventListener('change', ()=>{ app.precision = Number(selPrecision.value||2); renderRight(); });
+  selUnit.addEventListener('change', ()=>{ app.unit = selUnit.value||'cm'; renderRight(); });
+  chkVoice.addEventListener('change', ()=>{ app.voice = !!chkVoice.checked; renderRight(); });
+
+  // Submit
+  btnSubmit.addEventListener('click', ()=>{
+    app.attempts++;
+    statAttempts.textContent = app.attempts;
+    app.submitVal = inSubmitVal.value;
+    app.submitUnit = selSubmitUnit.value||app.unit;
+
+    const { baseLength, height } = computeBaseHeight(app.vertices, app.baseIdx);
+    const area = 0.5*baseLength*height;
+    const numeric = Number(app.submitVal);
+    const expected = area;
+    submitMsg.className = 'msg';
+    // colinear check
+    if(isCollinear(app.vertices) || height<1e-2 || baseLength<1e-6){
+      submitMsg.classList.add('error');
+      submitMsg.textContent = '当前三点共线，不能形成三角形，请调整顶点后再提交。';
+      pushEvent('submit',{ ok:false, reason:'colinear', attempts:app.attempts });
+      return;
+    }
+    if(app.submitUnit !== app.unit){
+      submitMsg.classList.add('warn');
+      submitMsg.textContent = '单位可能错误。请检查单位换算。';
+      pushEvent('submit',{ ok:false, reason:'unit_mismatch', attempts:app.attempts });
+    }
+    const absDiff = Math.abs(numeric-expected);
+    const relDiff = expected===0? absDiff : absDiff/Math.abs(expected);
+    let score=0, msg='';
+    if(relDiff<0.01 || absDiff<0.05){ msg='正确！数值与参考一致。'; score=60; }
+    else if(relDiff<0.05){ msg='接近正确，检查单位或四舍五入。'; score=40; }
+    else { msg='结果有较大差异，请检查高度与底的测量。'; score=0; }
+    const opScore = app.hintCount>0? 10:20;
+    const explainScore = 10;
+    const total = Math.min(100, score+opScore+explainScore);
+    submitMsg.className = 'msg info';
+    submitMsg.textContent = msg + ' 得分：' + total;
+    const record = {
+      studentId:'student_001',
+      taskId:'triangle_area_demo',
+      startTime: app.sessionStart,
+      endTime: Date.now(),
+      events: app.events.slice(),
+      finalShape: { vertices: app.vertices.slice() },
+      base: baseLength, height, area: expected,
+      hintsUsed: app.hintCount,
+      attempts: app.attempts,
+      score: total, teacherFeedback:''
+    };
+    app.records.push(record);
+    statRecords.textContent = app.records.length;
+    pushEvent('submit',{ ok:true, score:total, attempts:app.attempts });
+    machine.transition(State.SUBMITTED,{ score:total });
+  });
+
+  // Save/load local
+  btnSaveLocal.addEventListener('click', ()=>{
+    localStorage.setItem('tf_records', JSON.stringify(app.records));
+    alert('已保存到本地缓存（localStorage）');
+  });
+  btnLoadLocal.addEventListener('click', ()=>{
+    const s=localStorage.getItem('tf_records');
+    if(!s){ alert('无本地记录'); return; }
+    try{ app.records = JSON.parse(s)||[]; }catch(e){ app.records=[]; }
+    statRecords.textContent = app.records.length;
+    alert('已从本地恢复记录');
+  });
+
+  // Teacher: replay, export
+  btnReplay.addEventListener('click', ()=>{
+    if(app.events.length===0) return;
+    const cloned = app.events.slice();
+    const original = app.vertices.map(v=>({...v}));
+    let idx=0;
+    const timer = setInterval(()=>{
+      const ev = cloned[idx];
+      if(!ev){ clearInterval(timer); app.vertices = original; renderAll(); return; }
+      if(ev.type==='dragMove'){
+        app.vertices = app.vertices.map(p=>({ x:p.x + (Math.random()-0.5)*6, y:p.y + (Math.random()-0.5)*6 }));
+        renderAll();
+      }
+      if(ev.type==='dragEnd' && ev.payload && ev.payload.pos){
+        const i = ev.payload.index;
+        const pos = ev.payload.pos;
+        app.vertices = app.vertices.map((p,ii)=> ii===i? {...pos}: p);
+        renderAll();
+      }
+      idx++;
+    },200);
+  });
+
+  function exportCSV(){
+    if(app.records.length===0){ alert('无记录可导出'); return; }
+    const headers = ['studentId','taskId','startTime','endTime','base','height','area','hintsUsed','attempts','score'];
+    const lines = [headers.join(',')].concat(
+      app.records.map(r=>headers.map(h=>JSON.stringify(r[h]??'')).join(','))
+    );
+    const csv = lines.join('\n');
+    downloadBlob(csv,'records.csv','text/csv');
+  }
+  function exportJSON(){
+    const payload = JSON.stringify(app.records,null,2);
+    downloadBlob(payload,'records.json','application/json');
+  }
+  function downloadBlob(content, filename, type){
+    const blob = new Blob([content],{type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+  btnExportCSV.addEventListener('click', exportCSV);
+  btnExportJSON.addEventListener('click', exportJSON);
+
+  // Hints
+  function openHint(){ hintOverlay.style.display='block'; pushEvent('openHint',{}); }
+  function closeHint(){ hintOverlay.style.display='none'; }
+  btnHintClose.addEventListener('click', closeHint);
+  btnHintGrid.addEventListener('click', ()=>{
+    app.hintCount++; hintCountEl.textContent=app.hintCount; statHint.textContent=app.hintCount;
+    app.gridOn=true; renderGrid();
+    pushEvent('hintUsed',{ mode:'grid' });
+    setTimeout(()=>{ app.gridOn=false; renderGrid(); }, 6000);
+    closeHint();
+  });
+  btnHintMirror.addEventListener('click', ()=>{
+    app.hintCount++; hintCountEl.textContent=app.hintCount; statHint.textContent=app.hintCount;
+    pushEvent('hintUsed',{ mode:'mirror' });
+    startSpliceAnimation({ duration:1000, speed:1 });
+    closeHint();
+  });
+
+  // Expose a simple "提示"入口：双击右侧“步骤与公式”标题区域开启
+  document.querySelector('#right h3').addEventListener('dblclick', openHint);
+
+  // Copy formula from right panel
+  function updateFormulaAnimation(){
+    updateFormulaSteps();
+  }
+
+  // Clipboard and voice on right panel already wired.
+
+  // Init
+  pushHistory('init');
+  renderAll();
+  updateFormulaAnimation();
+})();
+</script>
+</body>
+</html>

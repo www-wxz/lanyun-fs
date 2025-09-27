@@ -1,0 +1,148 @@
+{
+  "用户角色与操作路径": {
+    "学生路径（典型）": [
+      "1. 登录/进入活动，阅读活动目标提示（简短）",
+      "2. 浏览步骤面板，开始第一步：系统展示一个可编辑三角形",
+      "3. 使用拖拽修改三角形的顶点，观察底边与对应高度如何变化",
+      "4. 使用标尺工具测量底边长度与高的垂直距离，读出数值",
+      "5. 在右侧输入区填写面积计算（或选择计算公式），提交检查",
+      "6. 若错误，使用提示（逐级：文本提示 → 高亮示范 → 动画演示），修改后再次提交",
+      "7. 完成练习后查看步骤回放、成绩与错题解析"
+    ],
+    "教师路径（典型）": [
+      "1. 进入教师控制台/活动设置，选择预设任务或自定义参数（例如：限制底边范围、是否允许网格）",
+      "2. 启动课堂模式：可实时观察学生画布缩略图或进度，发送全班提示/示范",
+      "3. 启用/禁用提示级别，或为个别学生解锁演示动画",
+      "4. 导出学生测评数据（正确率、平均时间、提交次数）并给出教学建议"
+    ]
+  },
+  "核心交互逻辑（事件与行为）": {
+    "交互类型": [
+      "点击（选中图形/切换工具/提交答案）",
+      "拖拽（拖动顶点改变三角形形状；拖动测量尺/滑块调整值）",
+      "绘制（画高度线或辅助线）",
+      "输入（数值/表达式输入框）",
+      "选择（多选题/下拉选择公式）",
+      "复制/变换（复制三角形并平移/旋转以拼成平行四边形）"
+    ],
+    "逻辑示例": [
+      "顶点拖拽 -> 触发 onVertexDrag -> 画布实时重绘，触发高度重计算，触发数值更新动画",
+      "点击'测量高度'工具 -> 进入测量模式，鼠标点击底边两端并在对面顶点点击，系统自动绘制垂线并测量长度",
+      "用户提交答案 -> 前端先做格式与单位校验 -> 调用 evaluateAnswer 接口 -> 返回结果并触发对应提示与得分动画"
+    ]
+  },
+  "系统反馈方式": {
+    "即时数值变化": "数值面板同步展示底边、对应高度与实时计算的面积（动态公式：Area = base × height ÷ 2），变化使用滚动数字动画。",
+    "提示文本": "分级提示：Level 1（提示用语）→ Level 2（步骤提示）→ Level 3（演示）；每级提示提供不同详细度且教师可控制可见性。",
+    "视觉反馈": "正确时：绿色高亮 + 勾选动画；错误时：红色抖动提示 + 说明性文本；操作引导时：闪烁箭头或脉冲高亮。",
+    "动画反馈": "关键教学步骤（如复制拼接）使用演示动画，支持播放/暂停/慢放并在动画结束处标注结论。",
+    "声音反馈（可选）": "简短的成功/错误提示音，支持关闭。"
+  },
+  "组件划分与 Props / Events 说明": {
+    "建议组件列表": [
+      {
+        "name": "HeaderBar",
+        "description": "顶部导航和全局状态展示",
+        "props": {
+          "title": "string（活动标题）",
+          "progress": "number（0-100）",
+          "role": "'student' | 'teacher'"
+        },
+        "events": {
+          "onRoleToggle": "{} 切换教师/学生模式",
+          "onExit": "{} 退出或返回课堂"
+        }
+      },
+      {
+        "name": "ToolBox",
+        "description": "左侧工具栏，包含形状/测量/网格等开关",
+        "props": {
+          "tools": "Array<ToolDescriptor>",
+          "activeTool": "string"
+        },
+        "events": {
+          "onToolSelect": "{ toolId }",
+          "onToolToggle": "{ toolId, enabled }"
+        }
+      },
+      {
+        "name": "StepPanel",
+        "description": "分步教学指引，显示当前步骤与提示等级",
+        "props": {
+          "steps": "Array<StepObject>",
+          "currentStep": "number",
+          "hintLevel": "number"
+        },
+        "events": {
+          "onStepChange": "{ stepIndex }",
+          "onRequestHint": "{ level }"
+        }
+      },
+      {
+        "name": "CanvasArea",
+        "description": "交互式几何画布（Canvas 或 SVG）",
+        "props": {
+          "shapes": "Array<ShapeObject>",
+          "gridEnabled": "boolean",
+          "snapToGrid": "boolean",
+          "editable": "boolean"
+        },
+        "events": {
+          "onVertexDrag": "{ shapeId, vertexId, x, y }",
+          "onShapeSelect": "{ shapeId }",
+          "onTransform": "{ shapeId, transform }",
+          "onAnimationEnd": "{ animationId }"
+        }
+      },
+      {
+        "name": "MeasurementRuler",
+        "description": "测量工具与标尺展示组件",
+        "props": {
+          "unit": "string（cm/m/自定义单位）",
+          "precision": "number（小数位）",
+          "visible": "boolean"
+        },
+        "events": {
+          "onMeasure": "{ type, value }",
+          "onToggleUnits": "{ unit }"
+        }
+      },
+      {
+        "name": "FeedbackPanel",
+        "description": "右侧数值展示与答案输入区",
+        "props": {
+          "base": "number",
+          "height": "number",
+          "computedArea": "number",
+          "studentAnswer": "string | number"
+        },
+        "events": {
+          "onAnswerSubmit": "{ answer }",
+          "onHintRequest": "{ level }",
+          "onSnapshot": "{}"
+        }
+      },
+      {
+        "name": "TeacherDashboard",
+        "description": "教师视图：学生进度、实时缩略图、设置",
+        "props": {
+          "classList": "Array<StudentSummary>",
+          "liveMode": "boolean"
+        },
+        "events": {
+          "onPushHintToAll": "{ hintLevel }",
+          "onViewStudent": "{ studentId }"
+        }
+      }
+    ],
+    "数据结构示例": {
+      "ShapeObject": "{ id, type:'triangle'|'parallelogram', vertices:[{x,y}], style:{fill,stroke}, metadata:{baseId,heightId} }",
+      "StepObject": "{ index, title, description, requiredAction, hintLevels:[...], demoAnimationId }"
+    }
+  },
+  "错误处理与冲突规则": {
+    "并发编辑": "若多人（教师与学生）同时控制同一画布，采用锁粒度为 shape 层级；教师可以强制覆盖。",
+    "输入校验": "数值输入必须与当前单位一致（提供单位下拉）。格式错误或超出合理范围时给出明确错误说明并不计入提交次数。",
+    "恢复策略": "操作历史堆栈（undo/redo），支持步骤回退与恢复默认状态。"
+  }
+}

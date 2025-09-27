@@ -1,0 +1,142 @@
+{
+  "html_structure": {
+    "布局": "单页面响应式布局，顶部标题栏（教学目标与步骤提示），中间主区域左右分栏：左侧为 SVG 动画画布（交互演示），右侧为数值/引导面板与控件；底部为步骤导航与辅助按钮",
+    "主要元素": [
+      "<header id='topBar'>教学：探索圆的周长与面积</header>",
+      "<main id='mainArea'>",
+      "  <section id='canvasPane'>",
+      "    <svg id='animSVG' viewBox='0 0 800 500' preserveAspectRatio='xMidYMid meet'></svg>",
+      "  </section>",
+      "  <aside id='sidePane'>",
+      "    <div id='stepHints'></div>",
+      "    <div id='valuePanel'>",
+      "      <div id='radiusDisplay'>半径 r: <span id='radiusVal'>50</span> px</div>",
+      "      <div id='circDisplay'>周长 C: <span id='circVal'>—</span></div>",
+      "      <div id='areaDisplay'>面积 A: <span id='areaVal'>—</span></div>",
+      "    </div>",
+      "    <div id='controls'>",
+      "      <input type='range' id='radiusSlider' min='20' max='180' value='50'/>",
+      "      <label><input type='checkbox' id='showGuides' checked/> 显示引导线</label>",
+      "      <label>扇形数: <input type='range' id='sectorsSlider' min='4' max='40' value='12' step='1'/></label>",
+      "      <div id='controlButtons'>",
+      "        <button id='btnPrev'>上一步</button>",
+      "        <button id='btnNext'>下一步</button>",
+      "        <button id='btnPlay'>播放动画</button>",
+      "        <button id='btnPause'>暂停</button>",
+      "        <button id='btnReset'>重置</button>",
+      "        <button id='btnShowFormula'>显示公式</button>",
+      "      </div>",
+      "    </div>",
+      "  </aside>",
+      "</main>",
+      "<footer id='footerNotes'>提示：拖动圆周上的蓝色小点可改变半径；拖动绿色“尺子”线段可测量周长。</footer>"
+    ],
+    "控件": [
+      "radiusSlider (滑块，用于改变半径)",
+      "sectorsSlider (滑块，用于改变分扇形的数量，观察近似效果)",
+      "btnNext / btnPrev (步骤导航)",
+      "btnPlay / btnPause / btnReset (动画控制)",
+      "btnShowFormula (显示并高亮公式)",
+      "可拖拽的圆周控制点 (.handle-perimeter)",
+      "可拖拽的测量线段 (.measure-ribbon) 用于模拟展开周长",
+      "切换显示引导线 showGuides"
+    ]
+  },
+  "css_plan": {
+    "整体风格": "明亮卡通风，简洁大按钮、圆角，适合 5～6 年级，强调可读性与操作明确性",
+    "颜色与字体": {
+      "主色": "蓝 (#2B8CFF) 与 黄 (#FFD166) 作为强调色",
+      "辅色": "绿 (#06D6A0) 与 淡灰背景 (#F6F8FA)",
+      "字体": "圆润无衬线字体（如 'Noto Sans' / 'Arial Rounded'），主文字 16~18px，提示和数值 18~22px 加粗"
+    },
+    "布局样式": {
+      "顶部标题": "固定高度，背景色浅蓝，文字居中，字号 20~22px",
+      "左右分栏": "左 60% 为 SVG，右 40% 为控件面板；移动端改为上下排列",
+      "按钮": "大按钮（44~52px 高），圆角 8px，悬停高亮，禁用态灰化",
+      "滑块与标签": "带清晰刻度与当前值显示"
+    },
+    "动画样式": [
+      "拖拽时 handle-perimeter 增加放大与阴影（transform: scale(1.2) + box-shadow）",
+      "当前步骤元素高亮（outline/发光）并且其文本使用渐变动画吸引注意",
+      "展开/重组成形动画使用平滑过渡（transition/GSAP）",
+      "数值变化使用数字滚动动画（小幅上移并渐显）"
+    ],
+    "辅助样式": {
+      "引导线": "虚线、半透明（stroke-dasharray），显示时淡黄色",
+      "测量线（尺子）": "绿色带刻度标记，拖动时显示当前长度旁注",
+      "扇形填充": "交替两种柔和颜色，透明度 0.9，边缘描边细边"
+    }
+  },
+  "js_plan": {
+    "总体架构": "模块化 JS，主模块包括：SVG 绘图模块、交互控制模块、动画控制器、教学步骤管理器、数学计算模块、提示/反馈模块。使用 requestAnimationFrame 管理帧动画，使用可选 GSAP 做过渡（可插拔）。",
+    "主要变量/状态": [
+      "state = { step:0..5, radius, sectorsCount, isPlaying, draggedElement, animFrameId }",
+      "svgElements = { circle, centerHandle, perimeterHandle, measureRibbon, sectorGroup, labels }"
+    ],
+    "事件绑定": [
+      "radiusSlider.oninput -> updateRadius(value)（同步更新 SVG 圆与数值显示）",
+      "perimeter handle 拖拽 -> 动态设置半径并实时计算周长/面积（支持触控）",
+      "sectorsSlider.oninput -> updateSectors(count)（重新绘制扇形）",
+      "btnNext.onclick -> stepManager.next()；btnPrev.onclick -> stepManager.prev()",
+      "btnPlay.onclick / btnPause.onclick -> animationController.play()/pause()",
+      "btnReset.onclick -> resetAll()",
+      "btnShowFormula.onclick -> revealFormula()",
+      "showGuides.onchange -> toggleGuides(display)"
+    ],
+    "教学步骤与交互流程 (stepManager)": [
+      "step 0 (准备): 显示空白圆与半径滑块提示，提示：'请拖动蓝点或滑块改变半径'。引导学生观察半径与圆大小关系。",
+      "step 1 (测量周长): 显示绿色“尺子”可拖拽贴合圆周，学生拖动尺子沿圆周一圈，系统记录长度并实时显示 C≈数值。提供提示：'尝试用尺子绕一圈并注意它的长度'。",
+      "step 2 (展开周长): 动画将尺子沿路径展开为直线（unwrap），并在旁边显示等长的直线段。实时将直线长度标注为 C，播放动画并语音/文本提示：'将圆周沿着切口展开，你得到一条长度为 C 的线'。",
+      "step 3 (扇形分割): 将圆切成 N 个扇形（由 sectorsSlider 控制 N），动画将扇形分开并交替旋转准备重组，提示：'把扇形一片片挪开'。",
+      "step 4 (重组成近似矩形): 动画将扇形交替排列，逐渐形成一个近似矩形，其底边约为 C/2，高约为 r。实时显示底边长度与高度，并计算面积近似为 (C/2)*r。引导学生观察：随着 N 增大，近似更像矩形。",
+      "step 5 (公式推导与验证): 自动或按钮触发显示推导：C = 2πr -> A = (C/2)*r = πr^2。同时验证用当前 r 代入公式与 SVG 中实际面积（扇形总面积）比较误差并显示。"
+    ],
+    "动画逻辑/实现细节": [
+      "drawCircle(radius) -> 在 animSVG 中绘制圆（<circle>）和半径线、中心点、可拖拽控制点；使用 transform-origin 保证动画平滑",
+      "measureAlongCircle() -> 实现一个可拖动的 measureRibbon 元素，其路径绑定圆周路径，拖动时计算并显示当前拖动长度；当拖满时触发展开动画",
+      "unwrapAnimation() -> 计算圆周路径长度 C（使用 2*Math.PI*radius）并把尺子路径平滑 morph 为直线（GSAP 或手写插值），在动画完成时显示标签 C",
+      "sliceSectors(n) -> 将圆按角度切成 n 个 <path> 扇形，逐个迁移到独立的 group，添加 hover 高亮与编号",
+      "rearrangeSectors(n) -> 交替旋转并平移每片扇形，使其交替排列近似矩形（底为 C/2，高为 r）；使用 requestAnimationFrame 或 GSAP timeline 逐帧调整位置以表现 '逐渐逼近' 的过程",
+      "valueUpdateLoop() -> 使用 requestAnimationFrame 更新数值面板显示（radius, C, A）和高亮当前要观察的图形部分；若 isPlaying 则推进动画时间轴",
+      "computeValues(radius) -> 返回 { C: 2*Math.PI*radius, A: Math.PI*radius*radius }，并用于比较实际扇形面积与公式计算"
+    ],
+    "交互反馈与教学提示": [
+      "在每个关键动作后弹出简短提示（文本+颜色高亮）例如：'你发现了当半径变大时，周长也变大'；提示会带有下一步操作的按钮",
+      "当学生将扇形数调大时，侧栏以图表或文本提示：'看！当扇形越多，排列越像矩形，误差越小'，并显示当前误差百分比",
+      "错误抗扰设计：当学生拖动离开合理范围，自动吸附回最近允许值并给出提示（避免混淆）",
+      "通过颜色关联（例如半径用黄色线、高度用黄色标签、底边用蓝色标签）让学生将视觉与数学符号对应起来"
+    ],
+    "无障碍与兼容性": [
+      "触控与鼠标事件均支持（pointer events），键盘可操作控件（滑块、按钮）",
+      "数值面板提供大字号与朗读/提示文本（可接屏读）",
+      "性能优化：扇形数量过大时限制到合理上限并降帧或使用位图缓存"
+    ],
+    "辅助函数与命名约定": [
+      "init() 初始化 SVG 与 UI 绑定",
+      "updateRadius(r) 修改状态并重绘",
+      "updateSectors(n) 重绘扇形",
+      "playStepAnimation(step) 播放指定步骤的动画片段",
+      "pauseAnimation(), resumeAnimation(), resetAll()",
+      "showHint(text, level), highlightElement(id/class)"
+    ]
+  },
+  "teaching_content": {
+    "一级主题": "图形与几何",
+    "二级主题": "图形 的认识与测量",
+    "年级": "5～6年级",
+    "课标要求": "探索圆的周长和面积计算公式。",
+    "基本实验活动": "探索圆的周长和面积计算公式",
+    "教学目标（针对交互设计）": [
+      "理解半径 r 与圆的大小之间的关系（可视化与操作）",
+      "通过测量与展开直观认识圆周 C 的含义与数值（C≈2πr）",
+      "通过将圆分成扇形并重组成近似矩形，直观导出面积公式 A = πr^2",
+      "培养观察、猜想与验证的能力：改变参数（r、扇形数）观察结果并比较误差"
+    ],
+    "课堂引导建议": [
+      "教师先示范 step 0-2，让学生熟悉拖拽和测量操作",
+      "分组实验：不同组尝试不同扇形数量，比较重组后的近似矩形差别",
+      "提问引导：'当你把扇形数增加，形状有何变化？底边长度与圆周有什么关系？为什么面积会变为 πr^2？'",
+      "课后练习：让学生用不同单位（厘米）测量实际圆形对象并用本工具验证公式"
+    ]
+  }
+}

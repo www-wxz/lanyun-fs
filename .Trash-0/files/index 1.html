@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>教学大模型交互界面</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { margin: 0; height: 100vh; display: flex; font-family: "Segoe UI", sans-serif; }
+    #left { width: 35%; display: flex; flex-direction: column; border-right: 1px solid #ddd; background: #f9f9f9; }
+    #chat { flex: 1; overflow-y: auto; padding: 15px; }
+    .msg-user { background: #007bff; color: white; padding: 8px 12px; border-radius: 12px; margin-bottom: 10px; max-width: 80%; align-self: flex-end; }
+    .msg-system { background: #111; color: #0f0; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; font-family: monospace; white-space: pre-wrap; }
+    #input-box { display: flex; border-top: 1px solid #ccc; padding: 10px; }
+    #input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+    #send-btn { margin-left: 10px; }
+    #right { flex: 1; }
+    iframe { width: 100%; height: 100%; border: none; }
+  </style>
+</head>
+<body>
+  <div id="left">
+    <div id="chat"></div>
+    <div id="input-box">
+      <input type="text" id="input" placeholder="请输入查询文本..." class="form-control">
+      <button id="send-btn" class="btn btn-primary">发送</button>
+    </div>
+  </div>
+  <div id="right">
+    <iframe id="preview"></iframe>
+  </div>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("input");
+    const sendBtn = document.getElementById("send-btn");
+    const preview = document.getElementById("preview");
+
+    function addMessage(text, type="system") {
+      const div = document.createElement("div");
+      div.className = type === "user" ? "msg-user" : "msg-system";
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendQuery() {
+      const query = input.value.trim();
+      if (!query) return;
+      addMessage(query, "user");
+      input.value = "";
+
+      try {
+        const res = await fetch("/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        if (data.error) {
+          addMessage("❌ 错误: " + (data.stderr || data.error));
+        } else {
+          addMessage(data.stdout);
+          preview.src = data.html_path;
+        }
+      } catch (err) {
+        addMessage("❌ 请求失败: " + err.message);
+      }
+    }
+
+    sendBtn.addEventListener("click", sendQuery);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") sendQuery(); });
+  </script>
+</body>
+</html>

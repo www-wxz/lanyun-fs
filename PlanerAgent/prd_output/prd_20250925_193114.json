@@ -1,0 +1,174 @@
+{
+  "html_structure": {
+    "布局": "单页面，顶部标题与进度，中间主交互区（左侧为 SVG 动画画布，右侧为步骤说明与数据面板），底部控制按钮与工具条",
+    "主要元素": [
+      "<header id=\"topBar\"><h1 id=\"lessonTitle\">探索圆的周长与面积</h1><div id=\"stepProgress\">步骤 1 / 5</div></header>",
+      "<main id=\"mainArea\">",
+      "  <section id=\"canvasArea\">",
+      "    <svg id=\"svgCanvas\" viewBox=\"0 0 800 500\" preserveAspectRatio=\"xMidYMid meet\"></svg>",
+      "    <div id=\"overlayHints\" aria-live=\"polite\"></div>",
+      "  </section>",
+      "  <aside id=\"sidePanel\">",
+      "    <div id=\"instructionBox\"></div>",
+      "    <div id=\"dataBox\">",
+      "      <div id=\"valueRadius\">半径 r: <span id=\"rValue\">50</span> px</div>",
+      "      <div id=\"valueDiameter\">直径 d: <span id=\"dValue\">100</span> px</div>",
+      "      <div id=\"valueCirc\">周长 C: <span id=\"cValue\">—</span></div>",
+      "      <div id=\"valueArea\">面积 A: <span id=\"aValue\">—</span></div>",
+      "      <div id=\"piEstimate\">π 估算: <span id=\"piValue\">—</span></div>",
+      "    </div>",
+      "  </aside>",
+      "</main>",
+      "<footer id=\"controls\">",
+      "  <div id=\"leftControls\">",
+      "    <button id=\"btnStart\">开始</button>",
+      "    <button id=\"btnPrev\" disabled>上一步</button>",
+      "    <button id=\"btnNext\">下一步</button>",
+      "  </div>",
+      "  <div id=\"middleControls\">",
+      "    <button id=\"btnPlayPause\">播放</button>",
+      "    <button id=\"btnReset\">重置</button>",
+      "    <label for=\"sliderRadius\">半径调整</label>",
+      "    <input id=\"sliderRadius\" type=\"range\" min=\"20\" max=\"180\" value=\"50\">",
+      "  </div>",
+      "  <div id=\"rightControls\">",
+      "    <button id=\"btnMeasureString\">用绳子测周长</button>",
+      "    <button id=\"btnCutSectors\">切分成扇形</button>",
+      "    <label><input id=\"chkShowGrid\" type=\"checkbox\"> 显示网格</label>",
+      "  </div>",
+      "</footer>"
+    ],
+    "控件": [
+      "开始(btnStart)",
+      "上一步(btnPrev)",
+      "下一步(btnNext)",
+      "播放/暂停(btnPlayPause)",
+      "重置(btnReset)",
+      "半径滑块(sliderRadius)",
+      "用绳子测周长(btnMeasureString)",
+      "切分成扇形(btnCutSectors)",
+      "显示网格复选(chkShowGrid)"
+    ],
+    "SVG元素id与class建议": {
+      "circle": "id=\"mainCircle\"",
+      "radiusHandle": "id=\"radiusHandle\" class=\"draggable\"",
+      "diameterLine": "id=\"diameterLine\"",
+      "stringPath": "id=\"stringPath\"",
+      "sectorsGroup": "id=\"sectorsGroup\"",
+      "sectorsRectView": "id=\"sectorsRectView\"",
+      "labels": "class=\"svgLabel\"",
+      "highlight": "class=\"highlight\""
+    }
+  },
+  "css_plan": {
+    "整体风格": "明亮、卡通、教育友好，适合 5～6 年级学生，界面简洁，控件明显，重点用颜色引导注意力",
+    "配色与字体": "主色调：蓝(#2D9CDB)、绿(#27AE60)、橙(#F2C94C)；背景浅色(#F7FCFF)；使用圆润无衬线字体（如 'Noto Sans', 'Rubik'），基础字号 16px，侧栏文字 14-15px，标签加粗",
+    "布局样式": "顶部固定、主区左右布局（SVG 70% / 侧栏 30%），底部控制栏固定在底部；响应式支持平板与触控",
+    "交互视觉": [
+      "拖拽顶点时：顶点半径放大并有外发光（box-shadow 或 SVG filter），连线高亮（stroke-width 增大，颜色变为橙色）",
+      "按钮：圆角 8px，悬停轻微升起（transform: translateY(-2px)），激活时颜色加深",
+      "数值更新：数值变化时文本短暂脉冲动画（scale 1.1 -> 1）以吸引注意",
+      "提示框/步骤：侧栏 instructionBox 使用卡片样式，关键文字加颜色高亮与下划线",
+      "SVG 标签：使用半透明白色边框的标签气泡，文本阴影确保在圆形上可读"
+    ],
+    "动画样式与过渡": [
+      "平滑过渡：所有颜色/位置变化使用 cubic-bezier(0.22, 1, 0.36, 1) 过渡 240ms",
+      "高亮：使用 CSS 动画和 SVG stroke-dashoffset 动画制作进度高亮",
+      "扇形重新排列：使用 transform 与 transition 实现平滑移动与旋转"
+    ],
+    "无障碍与触控": "控件具备足够尺寸（至少 44x44 px），高对比模式下边框变粗，键盘 focus 样式明显（outline 3px）"
+  },
+  "js_plan": {
+    "总体架构": "模块化 JS，主模块 lessonController 管理步骤与状态；uiModule 负责 DOM 更新；svgModule 管理 SVG 绘制与动画；interactionModule 处理拖拽/触摸；mathModule 提供几何计算",
+    "主状态与步骤": {
+      "states": [
+        "0: intro（引导，展示目标）",
+        "1: adjustRadius（学生拖动或滑块调整半径，观察变化）",
+        "2: measureCircumference（模拟用绳子测周长并计算）",
+        "3: estimatePi（通过测量回推 π 值并显示误差）",
+        "4: cutSectors（将圆切成若干扇形并重新排列，近似矩形证明面积公式）",
+        "5: revealFormula（展示并讲解 C=2πr 与 A=πr²，练习题）"
+      ],
+      "当前步骤控制": "btnNext/btnPrev 切换步骤；在每步进入时调用 lessonController.enterStep(stepIndex) 触发相应动画与提示"
+    },
+    "事件绑定": [
+      "document.querySelector('#sliderRadius').addEventListener('input', onRadiusSliderChange)",
+      "svgModule.bindDrag('#radiusHandle', onDragRadius) // 支持 mouse/touch/keyboard",
+      "document.querySelector('#btnMeasureString').addEventListener('click', startStringMeasurement)",
+      "document.querySelector('#btnCutSectors').addEventListener('click', cutCircleIntoSectors)",
+      "document.querySelector('#btnPlayPause').addEventListener('click', togglePlayPause)",
+      "btnNext/btnPrev/btnStart/btnReset 绑定相应控制函数",
+      "window.addEventListener('resize', svgModule.onResize)"
+    ],
+    "动画逻辑与步骤实现": {
+      "step1_adjustRadius": [
+        "用户可通过滑块或拖拽半径把手调整 r，实时调用 svgModule.drawCircle(r)",
+        "实时更新 d=2r，计算像素到单位（可设定 1 单位 = 10 px）并显示在侧栏",
+        "交互提示引导学生观察：当 r 改变，周长与面积如何变化（暂显示占位符），并提示下一步"
+      ],
+      "step2_measureCircumference": [
+        "模拟\"用绳子测量\"：点击 btnMeasureString 后，svgModule 绘制一条可拖拽的路径沿圆周铺设（字符串动画），使用 requestAnimationFrame 逐段生成 path",
+        "当字符串覆盖完整圆周时，显示长度 L（通过积分 arc length = 2πr），同时展示测量过程的数值累计",
+        "增加交互：学生可以拖动字符串端点进行测量、或点击分段标尺以查看局部长度"
+      ],
+      "step3_estimatePi": [
+        "将测得的周长 C 除以直径 d 计算 π_est = C / d，实时在侧栏显示并与 Math.PI 比较误差",
+        "动画：显示分数条或刻度尺对比估算值与真实 π（颜色过渡表示差距）",
+        "引导问题：如果改变半径，π_est 是否变化？（提示应该稳定）"
+      ],
+      "step4_cutSectors": [
+        "svgModule将圆切成 N 个扇形（默认 N=12，可由学生调整），显示每个扇形路径",
+        "逐个扇形动画移出并排列成近似矩形（上下交错），在动画中显示每个扇形的弧长与底边近似",
+        "计算矩形的近似宽度（弧长总和约等于 C）与高度（扇形高 ~ r/N? 实际为 r），通过动画引导学生看到面积近似为 (C/2) * r = πr^2",
+        "高亮步骤：扇形边界与矩形边界交替闪烁，引导观察面积组成"
+      ],
+      "step5_revealFormula": [
+        "在侧栏以动画形式逐条显示公式推导：C=2πr，A=πr²，并用学生交互的数值代入展示正确性",
+        "提供小测试按钮（quickQuiz）生成 2-3 个问答，例如给半径求周长/面积，学生输入后即时评分与提示"
+      ]
+    },
+    "实时数值与可视标签": [
+      "所有数值（r, d, C, A, π_est）在 UI 及 SVG 标签上实时更新（保留两位小数或按教学需要格式化）",
+      "当数值变化触发脉冲或高亮动画，且在关键数值达到接近真实值时给予鼓励提示（如“很好！π_est 接近 3.14”）"
+    ],
+    "交互反馈与教学提示": [
+      "每一步进入时在 overlayHints 显示一句引导话术（例如“现在请拖动半径把手，观察圆的大小变化”），并在 6 秒无操作时弹出提示",
+      "错误或非最佳操作时给出温和提示，如“尝试拖动把手或使用滑块调整半径”",
+      "成功完成某个实验（如完成切分并排列）给予可视奖励（星星弹出、颜色闪烁）"
+    ],
+    "性能与兼容": [
+      "动画使用 requestAnimationFrame 驱动，避免长任务阻塞主线程",
+      "SVG 操作尽量复用 DOM 元素，使用 transforms 而非重绘路径以提高性能",
+      "兼容触屏（touchstart/touchmove）与鼠标事件，提供键盘可操作性（左右箭头调整 r，Enter 触发测量）"
+    ],
+    "数据记录与导出": "可选功能：记录学生每一步的 r 值与测量结果到 localStorage，提供导出 JSON 的接口以便教师查看",
+    "测试点": [
+      "拖拽半径把手后 r/d/C/A 实时更新且数值合理",
+      "字符串测量完整覆盖后 C 与 2πr 一致（在浮点误差内）",
+      "扇形切分 rearrange 动画平滑，面积近似收敛到 πr² 随 N 增大",
+      "所有按钮在键盘与触控下可用"
+    ]
+  },
+  "teaching_content": {
+    "一级主题": "图形与几何",
+    "二级主题": "图形 的认识与测量",
+    "年级": "5～6年级",
+    "课标要求": "探索圆的周长和面积计算公式。",
+    "基本实验活动": "探索圆的周长和面积计算公式",
+    "教学目标": [
+      "通过交互式实验理解周长与直径/半径的关系，认识 π 的含义",
+      "通过将圆切分成扇形并排列成近似矩形的动画，直观理解面积 A=πr² 的来源",
+      "掌握基本测量方法（用绳子测周长）并培养观察、估算与验证能力"
+    ],
+    "学习评估建议": [
+      "过程性：观察学生能否完成拖拽、测量与切分操作、并能描述观察到的规律",
+      "结果性：通过小测验题判断学生是否能计算给定半径的周长与面积并能用数值验证公式"
+    ],
+    "课堂活动流程建议": [
+      "导入 (2 分钟)：展示目标与操作提示",
+      "探索 (10 分钟)：学生独立或小组使用滑块与拖拽调整半径，测量周长并估算 π",
+      "验证 (8 分钟)：切分并重排列扇形，观察面积形成并讨论结论",
+      "总结 (5 分钟)：显示公式、让学生完成 2 道练习题并提交结果"
+    ]
+  }
+}

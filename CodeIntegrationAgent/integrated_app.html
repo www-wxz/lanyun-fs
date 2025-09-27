@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>探索圆的周长与面积｜图形与几何 教学实验</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+:root{
+  --color-primary:#2E8BC0;
+  --color-secondary:#3FB0AC;
+  --color-accent:#F2C94C;
+  --color-success:#27AE60;
+  --color-warning:#F2994A;
+  --color-danger:#EB5757;
+  --bg:#FFFFFF;
+  --surface:#F7FCFF;
+  --muted:#6B7280;
+  --radius:8px;
+  --btn-height:44px;
+  --font-base:16px;
+  --font-title:22px;
+  --shadow-sm: 0 4px 10px rgba(46,139,192,0.12);
+  --shadow-md: 0 8px 18px rgba(46,139,192,0.14);
+  --svg-stroke: #0F172A;
+  --transition-fast: 200ms;
+  --transition-med: 320ms;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family: "Poppins", system-ui, -apple-system, "Noto Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-size:var(--font-base);
+  color:var(--svg-stroke);
+  background:linear-gradient(180deg,var(--surface),var(--bg));
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  margin:0;
+}
+
+/* Layout */
+.app-layout{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+  padding:18px;
+}
+.app-panel{
+  background:transparent;
+}
+.side-panel{
+  width:34%;
+  min-width:260px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.main-panel{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* Responsive: stack on narrow screens */
+@media (max-width:768px){
+  .app-layout{flex-direction:column}
+  .side-panel{width:100%; min-width:unset}
+}
+
+/* Canvas wrapper maintains 4:3 ratio and is touch-friendly */
+.canvas-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:4/3;
+  border-radius:12px;
+  border:3px solid rgba(46,139,192,0.14);
+  background:linear-gradient(180deg, rgba(63,176,172,0.04), rgba(46,139,192,0.02));
+  box-shadow:var(--shadow-md);
+  padding:12px;
+  overflow:hidden;
+  touch-action:none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* SVG root */
+#svgCanvas, .svg-canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* Title & typography */
+.ui-title{
+  font-size:var(--font-title);
+  font-weight:600;
+  color:var(--color-primary);
+  line-height:1.1;
+  letter-spacing:0.2px;
+}
+
+/* Controls */
+.controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.btn{
+  height:var(--btn-height);
+  border-radius:var(--radius);
+  cursor:pointer;
+  user-select:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 14px;
+  font-weight:600;
+  transition:transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease, opacity var(--transition-fast) ease;
+  box-shadow:var(--shadow-sm);
+  border: none;
+  color:white;
+  background:linear-gradient(90deg,var(--color-primary),var(--color-secondary));
+}
+.btn:active{transform:translateY(1px) scale(0.997)}
+.btn:focus-visible{outline:3px solid rgba(63,176,172,0.22); outline-offset:3px; border-radius:var(--radius)}
+.btn-ghost{
+  background:transparent;
+  color:var(--color-primary);
+  border:2px solid rgba(46,139,192,0.12);
+  box-shadow:none;
+}
+
+/* Feedback color variants */
+.btn-success{background:linear-gradient(90deg,var(--color-success),#38b673)}
+.btn-warning{background:linear-gradient(90deg,var(--color-warning),#f7a94f)}
+.btn-danger{background:linear-gradient(90deg,var(--color-danger),#f06b6b)}
+
+/* Inputs */
+.input{
+  border-radius:10px;
+  padding:10px 12px;
+  min-height:44px;
+  background:white;
+  border:1px solid rgba(15,23,42,0.06);
+  box-shadow:0 4px 12px rgba(2,6,23,0.04);
+  font-size:15px;
+}
+.input:focus-visible{
+  outline:3px solid rgba(46,139,192,0.14);
+  outline-offset:2px;
+}
+
+/* Range / Slider */
+.range{
+  width:100%;
+  height:40px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+input[type="range"]{
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  height:18px;
+  background:transparent;
+}
+input[type="range"]::-webkit-slider-runnable-track{
+  height:8px;
+  background:linear-gradient(90deg, rgba(46,139,192,0.16), rgba(63,176,172,0.12));
+  border-radius:999px;
+}
+input[type="range"]::-moz-range-track{
+  height:8px;
+  background:linear-gradient(90deg, rgba(46,139,192,0.16), rgba(63,176,172,0.12));
+  border-radius:999px;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;
+  height:20px;
+  border-radius:999px;
+  margin-top:-6px;
+  background:linear-gradient(180deg,var(--color-primary),var(--color-secondary));
+  box-shadow:0 6px 14px rgba(46,139,192,0.18);
+  border:3px solid #fff;
+  transition:transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+}
+input[type="range"]::-moz-range-thumb{
+  width:20px;
+  height:20px;
+  border-radius:999px;
+  background:linear-gradient(180deg,var(--color-primary),var(--color-secondary));
+  box-shadow:0 6px 14px rgba(46,139,192,0.18);
+  border:3px solid #fff;
+}
+input[type="range"]:active::-webkit-slider-thumb{transform:scale(1.06)}
+input[type="range"]:focus-visible{outline:3px solid rgba(63,176,172,0.16); outline-offset:6px}
+
+/* Value display with fade/number transition */
+.value-display{
+  min-width:62px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-radius:8px;
+  background:rgba(47,139,192,0.06);
+  font-weight:600;
+  transition:opacity var(--transition-fast) ease, transform var(--transition-fast) ease;
+}
+.value-display.change{
+  animation: valueShift 320ms ease;
+}
+@keyframes valueShift{
+  0%{opacity:0; transform:translateY(-6px) scale(0.98)}
+  100%{opacity:1; transform:translateY(0) scale(1)}
+}
+
+/* Tooltip */
+.tooltip{
+  pointer-events:none;
+  position:absolute;
+  background:linear-gradient(180deg,#fff,rgba(255,255,255,0.96));
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:14px;
+  color:var(--svg-stroke);
+  box-shadow:var(--shadow-md);
+  transition:opacity var(--transition-fast) ease, transform var(--transition-fast) ease;
+  opacity:0;
+  transform:translateY(6px) scale(0.98);
+  will-change:opacity,transform;
+}
+.tooltip.show{opacity:1; transform:translateY(0) scale(1)}
+
+/* SVG interactive elements */
+.svg-node{ cursor:grab; touch-action:none; }
+.svg-node:active{ cursor:grabbing; }
+.svg-node circle{
+  fill:#ffffff;
+  stroke:var(--color-primary);
+  stroke-width:2;
+  transition:transform var(--transition-fast) ease, stroke-width var(--transition-fast) ease, filter var(--transition-fast) ease;
+  transform-origin:center;
+}
+.svg-node:hover circle, .svg-node:focus-visible circle{
+  transform:scale(1.08);
+  filter:drop-shadow(0 6px 14px rgba(46,139,192,0.12));
+}
+.svg-node:focus-visible circle{ outline:3px solid rgba(63,176,172,0.16); outline-offset:4px }
+
+/* Arc / sector styles */
+.arc, .sector{ transition:stroke-width var(--transition-fast) ease, stroke var(--transition-fast) ease, opacity var(--transition-med) ease, transform var(--transition-med) ease; transform-origin:center; }
+.arc{ stroke:var(--color-primary); stroke-width:2; fill:none }
+.sector{ opacity:0.95 }
+
+/* Dragging highlight: stroke-width from 2 -> 4 and accent color */
+.dragging .arc, .dragging .sector, .dragging path, .dragging circle{
+  stroke-width:4 !important;
+  stroke:var(--color-secondary) !important;
+  transition:stroke-width 160ms ease, stroke 160ms ease;
+}
+
+/* Node hover/focus emphasis */
+.node-active circle, .node-current circle{
+  transform:scale(1.12);
+  filter:drop-shadow(0 10px 22px rgba(63,176,172,0.16));
+  stroke:var(--color-secondary);
+}
+
+/* Current operation highlight / flash */
+.flash{
+  animation: flashPulse 900ms ease-in-out infinite;
+}
+@keyframes flashPulse{
+  0%{opacity:1; transform:scale(1)}
+  50%{opacity:0.8; transform:scale(1.02)}
+  100%{opacity:1; transform:scale(1)}
+}
+
+/* Sector rearrange animation */
+.rearrange-animation{
+  transition:transform 420ms ease-out, opacity 360ms ease-out;
+}
+.rearrange-animation.enter{ opacity:0; transform:translateY(-10px) scale(0.98) }
+.rearrange-animation.enter-active{ opacity:1; transform:translateY(0) scale(1) }
+
+/* String straighten animation (path morph hint) */
+.straighten-animation{
+  transition:stroke-dashoffset 520ms cubic-bezier(.22,.9,.24,1), opacity 420ms ease;
+}
+
+/* axis & guide lines */
+.grid-line{ stroke:#e6f3f7; stroke-width:1; opacity:0.9; vector-effect:non-scaling-stroke; }
+
+/* accessible live region */
+.sr-live{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden }
+
+/* focus ring for sliders and buttons */
+.focus-ring:focus-visible{ outline:4px solid rgba(46,139,192,0.14); outline-offset:3px; border-radius:8px }
+
+/* small helpers */
+.kv-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hint{font-size:13px;color:var(--muted);}
+
+/* Ensure contrast for labels and interactive text */
+.label{
+  font-size:14px;
+  color:rgba(15,23,42,0.88);
+  font-weight:600;
+}
+
+/* High-contrast variant for readability */
+.high-contrast{
+  color:#07122b;
+  background:linear-gradient(180deg,#fff,#f7fcff);
+  box-shadow:0 6px 18px rgba(7,18,43,0.06);
+}
+
+/* Utility for emphasis badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 8px;
+  border-radius:999px;
+  background:rgba(242,201,76,0.12);
+  color:var(--color-accent);
+  font-weight:700;
+  font-size:13px;
+}
+
+/* SVG element defaults for crisp visuals on touch displays */
+svg{touch-action:none; -webkit-user-select:none; -ms-user-select:none; user-select:none}
+
+/* ARIA visible focus helpers for interactive SVG elements */
+[role="button"]:focus-visible, .svg-node:focus-visible{ outline:none; box-shadow:0 6px 18px rgba(46,139,192,0.12); border-radius:6px }
+
+/* Small-screen adjustments for controls to remain large & touch friendly */
+@media (max-width:480px){
+  .btn{height:48px; padding:0 16px}
+  .input{min-height:48px}
+  .value-display{min-width:56px; font-size:15px}
+}
+
+/* 额外样式以匹配页面结构 */
+header#header{
+  padding:18px;
+  border-bottom:2px solid rgba(46,139,192,0.12);
+  background:linear-gradient(180deg,#fff,rgba(247,252,255,0.8));
+}
+#header h1{
+  margin:0 0 6px 0;
+  font-size:28px;
+  color:var(--color-primary);
+}
+#header p#subtitle{ margin:0; color:#334155 }
+.tool-bar{
+  width:220px;
+  min-width:200px;
+  background:#fff;
+  border:2px solid rgba(46,139,192,0.12);
+  border-radius:12px;
+  box-shadow:var(--shadow-sm);
+  padding:12px;
+}
+.tool-bar--left{ order:-1 }
+.tool-bar__group{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.tool-bar__group button{
+  width:100%;
+  justify-content:center;
+}
+.tool-bar__label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border-top:1px dashed rgba(46,139,192,0.18);
+  padding-top:8px;
+  margin-top:8px;
+}
+main#main{
+  display:flex;
+  gap:12px;
+  align-items:stretch;
+}
+aside#sidePanel{
+  width:280px;
+  min-width:240px;
+  background:#fff;
+  border:2px solid rgba(46,139,192,0.12);
+  border-radius:12px;
+  box-shadow:var(--shadow-sm);
+  padding:12px;
+}
+#values .valueRow{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
+#hints{ margin-top:12px; min-height:48px; color:#475569 }
+footer#controls{
+  padding:18px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  border-top:2px solid rgba(46,139,192,0.12);
+  background:linear-gradient(180deg,#fff,rgba(247,252,255,0.6));
+}
+.control-group{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.control-group label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+section#hintPanel{
+  padding:18px;
+}
+section#hintPanel h2{ margin:0 0 8px 0; color:#0f172a }
+section#hintPanel ul{ margin:8px 0 0 18px }
+.hidden{ display:none !important }
+.value-strong{ font-weight:700 }
+  </style>
+</head>
+<body>
+  <header id="header" role="banner" aria-label="页面标题">
+    <h1 id="title">探索圆的周长与面积</h1>
+    <p id="subtitle">通过拖拽、拆分与重组，直观理解 C=2πr 与 A=πr²</p>
+    <div class="badge">课标要求：探索圆的周长和面积计算公式</div>
+    <div id="meta" aria-hidden="false" class="hint">
+      主题：图形与几何 ｜ 子主题：图形 的认识与测量 ｜ 年级：5～6年级
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <aside id="toolBarLeft" class="tool-bar tool-bar--left" aria-label="左 工具栏">
+      <div class="tool-bar__group" role="toolbar" aria-orientation="vertical">
+        <button data-action="playPause" class="btn btn-success" aria-pressed="false" title="播放 / 暂停">播放 / 暂停</button>
+        <button data-action="prevStep" class="btn btn-ghost" title="上一步">上一步</button>
+        <button data-action="nextStep" class="btn btn-ghost" title="下一步">下一步</button>
+        <button data-action="reset" class="btn btn-danger" title="重置">重置</button>
+        <label class="tool-bar__label">
+          <input id="showAngle" type="checkbox" /> 显示角度
+        </label>
+      </div>
+    </aside>
+
+    <main id="main" role="main" class="main-panel">
+      <div id="canvasWrap" class="canvas-wrap" aria-live="polite">
+        <svg
+          id="svgCanvas"
+          width="640"
+          height="480"
+          viewBox="0 0 640 480"
+          role="img"
+          aria-label="圆的实验画布"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <title>圆的实验画布：可视化周长与面积</title>
+
+          <g id="grid" aria-hidden="true"></g>
+
+          <g id="circleGroup" aria-label="圆与相关要素">
+            <circle id="circleMain" cx="320" cy="240" r="50" fill="none" stroke="currentColor" class="arc"></circle>
+            <line id="radiusLine" x1="320" y1="240" x2="370" y2="240" stroke="currentColor" stroke-width="2"></line>
+            <g id="radiusHandleGroup" class="svg-node">
+              <circle id="radiusHandle" cx="370" cy="240" r="8" role="slider" tabindex="0" aria-label="拖动以改变半径" aria-valuemin="20" aria-valuemax="140" aria-valuenow="50"></circle>
+            </g>
+            <circle id="circleCenter" cx="320" cy="240" r="3" fill="currentColor" aria-hidden="true"></circle>
+          </g>
+
+          <g id="unwrapGroup" transform="translate(0,360)" aria-label="周长演示 (展开)">
+            <path id="tapeMeasure" d="" fill="none" stroke="currentColor" class="arc straighten-animation" stroke-width="2" stroke-dasharray="6 6"></path>
+          </g>
+
+          <g id="sectorsGroup" aria-label="扇形分割"></g>
+
+          <g id="labels" aria-hidden="false">
+            <text id="labelR" x="10" y="20">半径 r</text>
+            <text id="labelC" x="10" y="40">周长 C</text>
+            <text id="labelA" x="10" y="60">面积 A</text>
+            <text id="labelTheta" x="10" y="80" class="hidden">每个扇形的圆心角 θ</text>
+          </g>
+
+          <g id="helper" aria-hidden="true">
+            <path id="guidePath" d="" fill="none" stroke="currentColor" class="arc" stroke-width="2"></path>
+            <text id="angleText" x="0" y="0" class="hidden">θ</text>
+            <path id="rectHint" d="" fill="none" stroke="currentColor" class="arc" stroke-width="2" opacity="0.6"></path>
+          </g>
+        </svg>
+      </div>
+
+      <aside id="sidePanel" class="side-panel" aria-label="数值与步骤提示面板">
+        <div id="values" aria-live="polite">
+          <div class="valueRow">
+            半径: <span id="radiusValue" class="value-display">50</span> px
+          </div>
+          <div class="valueRow">
+            周长 C: <span id="circValue" class="value-display">—</span>
+          </div>
+          <div class="valueRow">
+            面积 A: <span id="areaValue" class="value-display">—</span>
+          </div>
+          <div class="valueRow">
+            扇形数量: <span id="sectorsValue" class="value-display">12</span>
+          </div>
+        </div>
+
+        <div id="hints" aria-live="polite">
+          交互提示将在此显示
+        </div>
+      </aside>
+    </main>
+
+    <aside id="toolBarRight" class="tool-bar tool-bar--right" aria-label="右 工具栏">
+      <div class="tool-bar__group" role="toolbar" aria-orientation="vertical">
+        <button data-action="playPause" class="btn btn-success" aria-pressed="false" title="播放 / 暂停">播放 / 暂停</button>
+        <button data-action="prevStep" class="btn btn-ghost" title="上一步">上一步</button>
+        <button data-action="nextStep" class="btn btn-ghost" title="下一步">下一步</button>
+        <button data-action="reset" class="btn btn-danger" title="重置">重置</button>
+        <label class="tool-bar__label">
+          <input id="showAngleToolbar" type="checkbox" /> 显示角度
+        </label>
+      </div>
+    </aside>
+  </div>
+
+  <footer id="controls" role="contentinfo" aria-label="控制区">
+    <div id="stepControls" class="control-group" aria-label="步骤控制">
+      <button id="prevStep" class="btn btn-ghost">上一步</button>
+      <button id="nextStep" class="btn btn-ghost">下一步</button>
+      <button id="playPause" class="btn btn-success">播放</button>
+      <button id="reset" class="btn btn-danger">重置</button>
+    </div>
+
+    <div id="paramControls" class="control-group" aria-label="参数控制">
+      <label>
+        半径
+        <input id="radiusSlider" class="focus-ring" type="range" min="20" max="140" value="50" aria-label="半径滑块" />
+      </label>
+      <input id="radiusInput" class="input" type="number" min="20" max="140" value="50" aria-label="半径输入框" />
+    </div>
+
+    <div id="toggleControls" class="control-group" aria-label="切换控制">
+      <label>
+        <input id="showFormula" type="checkbox" /> 显示公式提示
+      </label>
+      <label>
+        扇形数量
+        <input id="sectorsRange" class="focus-ring" type="range" min="4" max="48" value="12" aria-label="扇形数量滑块" />
+      </label>
+    </div>
+  </footer>
+
+  <section id="hintPanel" aria-label="教学提示">
+    <h2>教师提示 / 任务说明</h2>
+    <p>基本实验活动：探索圆的周长和面积计算公式。学生可以通过拖动半径端点改变半径，观察数值变化。使用扇形分割与重组来直观理解周长与面积公式的来源。</p>
+    <ul>
+      <li>让学生尝试不同半径并记录周长与面积的比例关系。</li>
+      <li>通过增加扇形数量观察“展开后”的接近直线效果。</li>
+      <li>提示：C = 2πr，A = πr²。</li>
+    </ul>
+  </section>
+
+  <script>
+  (function(){
+    // 画布基础参数
+    const W = 640, H = 480;
+    const cx = 320, cy = 240;
+    const minR = 20, maxR = 140;
+    const state = {
+      r: 50,
+      angle: 0, // 当前半径方向角（弧度）
+      sectors: 12,
+      showFormula: false,
+      showAngle: false,
+      step: 1,
+      playing: false,
+      playTimer: null,
+      unwrapAnim: { running:false, t:0 },
+      rearranged: false
+    };
+
+    // DOM 引用
+    const svg = document.getElementById('svgCanvas');
+    const circle = document.getElementById('circleMain');
+    const radiusLine = document.getElementById('radiusLine');
+    const radiusHandle = document.getElementById('radiusHandle');
+    const circleGroup = document.getElementById('circleGroup');
+    const gridGroup = document.getElementById('grid');
+    const unwrapGroup = document.getElementById('unwrapGroup');
+    const tapeMeasure = document.getElementById('tapeMeasure');
+    const sectorsGroup = document.getElementById('sectorsGroup');
+    const labelsGroup = document.getElementById('labels');
+    const labelR = document.getElementById('labelR');
+    const labelC = document.getElementById('labelC');
+    const labelA = document.getElementById('labelA');
+    const labelTheta = document.getElementById('labelTheta');
+    const helperGroup = document.getElementById('helper');
+    const guidePath = document.getElementById('guidePath');
+    const angleText = document.getElementById('angleText');
+    const rectHint = document.getElementById('rectHint');
+
+    const radiusValue = document.getElementById('radiusValue');
+    const circValue = document.getElementById('circValue');
+    const areaValue = document.getElementById('areaValue');
+    const sectorsValue = document.getElementById('sectorsValue');
+    const hints = document.getElementById('hints');
+
+    const radiusSlider = document.getElementById('radiusSlider');
+    const radiusInput = document.getElementById('radiusInput');
+    const showFormula = document.getElementById('showFormula');
+    const showAngleMain = document.getElementById('showAngle');
+    const showAngleToolbar = document.getElementById('showAngleToolbar');
+    const sectorsRange = document.getElementById('sectorsRange');
+
+    const playBtnFooter = document.getElementById('playPause');
+    const prevBtnFooter = document.getElementById('prevStep');
+    const nextBtnFooter = document.getElementById('nextStep');
+    const resetBtnFooter = document.getElementById('reset');
+
+    // 工具栏按钮（存在重复 ID 的情况，统一用 data-action 处理）
+    const toolbarButtons = document.querySelectorAll('[data-action]');
+
+    // 初始化网格
+    function drawGrid(){
+      const step = 40;
+      const parts = [];
+      for(let x=0; x<=W; x+=step){
+        parts.push('<line class="grid-line" x1="'+x+'" y1="0" x2="'+x+'" y2="'+H+'"/>');
+      }
+      for(let y=0; y<=H; y+=step){
+        parts.push('<line class="grid-line" x1="0" y1="'+y+'" x2="'+W+'" y2="'+y+'"/>');
+      }
+      gridGroup.innerHTML = parts.join('');
+    }
+
+    // 数值显示更新（带轻微动画）
+    function updateValueDisplay(el, valueText){
+      el.textContent = valueText;
+      el.classList.remove('change');
+      void el.offsetWidth; // 触发重排以重启动画
+      el.classList.add('change');
+    }
+
+    // 角度辅助显示（小弧）
+    function updateAngleGuide(){
+      if(!state.showAngle){
+        guidePath.setAttribute('d','');
+        angleText.classList.add('hidden');
+        labelTheta.classList.add('hidden');
+        return;
+      }
+      labelTheta.classList.remove('hidden');
+      const rSmall = 18;
+      const a0 = 0;
+      const a1 = state.angle;
+      const x0 = cx + rSmall*Math.cos(a0);
+      const y0 = cy + rSmall*Math.sin(a0);
+      const x1 = cx + rSmall*Math.cos(a1);
+      const y1 = cy + rSmall*Math.sin(a1);
+      const largeArc = Math.abs(a1 - a0) > Math.PI ? 1 : 0;
+      const sweep = a1 >= a0 ? 1 : 0;
+      const d = `M ${cx} ${cy} L ${x0} ${y0} A ${rSmall} ${rSmall} 0 ${largeArc} ${sweep} ${x1} ${y1}`;
+      guidePath.setAttribute('d', d);
+      angleText.textContent = `θ≈${Math.round(Math.abs(a1-a0)*180/Math.PI)}°`;
+      angleText.setAttribute('x', cx + (rSmall+12)*Math.cos(a1));
+      angleText.setAttribute('y', cy + (rSmall+12)*Math.sin(a1));
+      angleText.classList.remove('hidden');
+    }
+
+    // 周长展开演示路径
+    function updateUnwrap(){
+      const C = 2*Math.PI*state.r;
+      const usable = 600; // 可视的最大长度
+      const s = Math.min(1, usable / C);
+      const startX = 20, baseY = 0; // unwrapGroup 已 translate(0,360)
+      const endX = startX + C*s;
+      const d = `M ${startX} ${baseY} H ${endX}`;
+      tapeMeasure.setAttribute('d', d);
+      // 使用虚线动画
+      const len = C*s;
+      tapeMeasure.style.strokeDasharray = `${len} ${len}`;
+      if(state.playing && state.step===2){
+        tapeMeasure.style.opacity = '1';
+        state.unwrapAnim.running = true;
+      }else{
+        state.unwrapAnim.running = false;
+        tapeMeasure.style.opacity = state.step===2 ? '1' : '0';
+      }
+    }
+
+    // 扇形分割生成
+    function renderSectors(){
+      sectorsGroup.innerHTML = '';
+      const n = state.sectors;
+      const r = state.r;
+      const items = [];
+      const baseColors = [];
+      for(let i=0;i<n;i++){
+        const t0 = i*2*Math.PI/n;
+        const t1 = (i+1)*2*Math.PI/n;
+        const x0 = cx + r*Math.cos(t0);
+        const y0 = cy + r*Math.sin(t0);
+        const x1 = cx + r*Math.cos(t1);
+        const y1 = cy + r*Math.sin(t1);
+        const largeArc = 0, sweep = 1;
+        const d = `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${largeArc} ${sweep} ${x1} ${y1} Z`;
+        const hue = 190 + (i*160/n);
+        const fill = `hsl(${hue}, 60%, ${i%2===0?58:68}%)`;
+        const item = `
+          <g class="rearrange-animation" data-index="${i}">
+            <path class="sector" d="${d}" fill="${fill}" stroke="rgba(15,23,42,0.2)" stroke-width="1" />
+          </g>
+        `;
+        items.push(item);
+      }
+      sectorsGroup.innerHTML = items.join('');
+      updateSectorTransforms();
+      updateRectHint();
+    }
+
+    // 扇形重组动画
+    function updateSectorTransforms(){
+      const n = state.sectors;
+      const r = state.r;
+      const C = Math.PI*r; // 近似“矩形”宽度（上下一半弧拼合后）
+      const usable = 600;
+      const s = Math.min(1, usable / (Math.PI*r));
+      const baseX = 20, baseY = 410; // 在画布底部附近排布
+      const nodes = sectorsGroup.querySelectorAll('g.rearrange-animation');
+      nodes.forEach((g,i)=>{
+        if(state.step===3){
+          const dx = baseX + i*(C/n)*s;
+          const dy = baseY;
+          const flip = (i%2===0) ? 1 : -1;
+          const transform = `translate(${dx - cx*s}, ${dy - cy}) scale(${s}, ${flip})`;
+          g.setAttribute('transform', transform);
+          g.style.opacity = '1';
+        }else{
+          g.setAttribute('transform', '');
+          g.style.opacity = (state.step===1) ? '0.15' : '0.6';
+        }
+      });
+    }
+
+    // 面积矩形提示框
+    function updateRectHint(){
+      if(state.step!==3){
+        rectHint.setAttribute('d','');
+        return;
+      }
+      const r = state.r;
+      const width = Math.PI*r;
+      const usable = 600;
+      const s = Math.min(1, usable / width);
+      const w = width*s;
+      const h = r; // 高约为 r
+      const x = 20, y = 410 - h; // 顶部坐标
+      const d = `M ${x} ${y} H ${x+w} V ${y+h} H ${x} Z`;
+      rectHint.setAttribute('d', d);
+    }
+
+    // 更新圆与半径句柄位置
+    function updateCircleAndHandle(){
+      const r = state.r;
+      const hx = cx + r*Math.cos(state.angle);
+      const hy = cy + r*Math.sin(state.angle);
+      circle.setAttribute('r', r);
+      radiusLine.setAttribute('x2', hx);
+      radiusLine.setAttribute('y2', hy);
+      radiusHandle.setAttribute('cx', hx);
+      radiusHandle.setAttribute('cy', hy);
+      radiusHandle.setAttribute('aria-valuenow', r);
+    }
+
+    // 数值计算与显示更新
+    function updateValues(){
+      const r = state.r;
+      const C = 2*Math.PI*r;
+      const A = Math.PI*r*r;
+      updateValueDisplay(radiusValue, String(r));
+      updateValueDisplay(circValue, C.toFixed(2));
+      updateValueDisplay(areaValue, A.toFixed(2));
+      updateValueDisplay(sectorsValue, String(state.sectors));
+      labelR.textContent = state.showFormula ? `半径 r` : `半径 r`;
+      labelC.textContent = state.showFormula ? `周长 C = 2πr` : `周长 C`;
+      labelA.textContent = state.showFormula ? `面积 A = πr²` : `面积 A`;
+    }
+
+    // 步骤提示
+    function updateHints(){
+      let txt = '';
+      if(state.step===1){
+        txt = '步骤 1：拖动半径端点或使用下方滑块，观察周长 C 与面积 A 随半径 r 的变化。';
+      }else if(state.step===2){
+        txt = '步骤 2：展开圆的周长，观察直线长度与 C 的关系。播放可查看展开动画。';
+      }else if(state.step===3){
+        txt = '步骤 3：将圆按扇形分割并交错重组，形成近似矩形，宽约为 πr，高约为 r，从而理解 A = πr²。';
+      }
+      hints.textContent = txt + (state.showFormula ? '（已显示公式提示）' : '');
+    }
+
+    // 统一刷新
+    function refreshAll(){
+      updateCircleAndHandle();
+      updateValues();
+      updateAngleGuide();
+      updateUnwrap();
+      renderSectors();
+      updateHints();
+      svg.classList.toggle('dragging', dragging);
+      tapeMeasure.style.opacity = (state.step===2) ? '1' : '0';
+    }
+
+    // 拖拽逻辑
+    let dragging = false;
+    function toSVGPoint(evt){
+      const pt = svg.createSVGPoint();
+      pt.x = evt.clientX;
+      pt.y = evt.clientY;
+      const m = svg.getScreenCTM();
+      const p = pt.matrixTransform(m.inverse());
+      return {x:p.x, y:p.y};
+    }
+    function onHandleDown(evt){
+      dragging = true;
+      svg.classList.add('dragging');
+      radiusHandle.focus();
+      evt.preventDefault();
+    }
+    function onPointerMove(evt){
+      if(!dragging) return;
+      const p = toSVGPoint(evt);
+      const dx = p.x - cx, dy = p.y - cy;
+      const r = Math.max(minR, Math.min(maxR, Math.hypot(dx,dy)));
+      const angle = Math.atan2(dy,dx);
+      state.r = Math.round(r);
+      state.angle = angle;
+      radiusSlider.value = state.r;
+      radiusInput.value = state.r;
+      refreshAll();
+    }
+    function onPointerUp(){
+      if(!dragging) return;
+      dragging = false;
+      svg.classList.remove('dragging');
+    }
+
+    // 键盘调整半径
+    function onHandleKey(e){
+      const step = (e.shiftKey ? 5 : 1);
+      if(e.key==='ArrowRight' || e.key==='ArrowUp'){
+        state.r = Math.min(maxR, state.r + step);
+        radiusSlider.value = state.r; radiusInput.value = state.r;
+        refreshAll();
+      }else if(e.key==='ArrowLeft' || e.key==='ArrowDown'){
+        state.r = Math.max(minR, state.r - step);
+        radiusSlider.value = state.r; radiusInput.value = state.r;
+        refreshAll();
+      }
+    }
+
+    // 控件事件
+    radiusSlider.addEventListener('input', e=>{
+      state.r = Math.round(Number(e.target.value));
+      radiusInput.value = state.r;
+      refreshAll();
+    });
+    radiusInput.addEventListener('input', e=>{
+      let v = Math.round(Number(e.target.value));
+      if(Number.isNaN(v)) v = state.r;
+      v = Math.max(minR, Math.min(maxR, v));
+      state.r = v;
+      radiusSlider.value = state.r;
+      refreshAll();
+    });
+
+    showFormula.addEventListener('change', e=>{
+      state.showFormula = !!e.target.checked;
+      refreshAll();
+    });
+
+    function syncAngleCheckboxes(flag){
+      showAngleMain.checked = flag;
+      showAngleToolbar.checked = flag;
+    }
+    showAngleMain.addEventListener('change', e=>{
+      state.showAngle = !!e.target.checked;
+      syncAngleCheckboxes(state.showAngle);
+      refreshAll();
+    });
+    showAngleToolbar.addEventListener('change', e=>{
+      state.showAngle = !!e.target.checked;
+      syncAngleCheckboxes(state.showAngle);
+      refreshAll();
+    });
+
+    sectorsRange.addEventListener('input', e=>{
+      state.sectors = Math.round(Number(e.target.value));
+      refreshAll();
+    });
+
+    // 步骤控制
+    function setStep(step){
+      state.step = Math.max(1, Math.min(3, step));
+      // 显隐分组与辅助
+      unwrapGroup.classList.toggle('hidden', state.step!==2);
+      sectorsGroup.classList.toggle('hidden', state.step===1);
+      refreshAll();
+    }
+    function playToggle(){
+      state.playing = !state.playing;
+      const btns = document.querySelectorAll('#playPause,[data-action="playPause"]');
+      btns.forEach(b=>{
+        b.textContent = state.playing ? '暂停' : '播放';
+        b.setAttribute('aria-pressed', state.playing ? 'true':'false');
+      });
+      if(state.playing){
+        startAuto();
+      }else{
+        stopAuto();
+      }
+      refreshAll();
+    }
+    function startAuto(){
+      stopAuto();
+      if(state.step===2){
+        state.unwrapAnim.running = true;
+      }
+      state.playTimer = setInterval(()=>{
+        // 自动在步骤之间循环
+        setStep(state.step%3 + 1);
+        if(state.step===2){
+          state.unwrapAnim.t = 0;
+          state.unwrapAnim.running = true;
+        }
+        refreshAll();
+      }, 4000);
+    }
+    function stopAuto(){
+      if(state.playTimer){
+        clearInterval(state.playTimer);
+        state.playTimer = null;
+      }
+      state.unwrapAnim.running = false;
+    }
+
+    function resetAll(){
+      stopAuto();
+      state.r = 50;
+      state.angle = 0;
+      state.sectors = 12;
+      state.showFormula = false;
+      state.showAngle = false;
+      syncAngleCheckboxes(false);
+      radiusSlider.value = state.r;
+      radiusInput.value = state.r;
+      sectorsRange.value = state.sectors;
+      setStep(1);
+      refreshAll();
+    }
+
+    prevBtnFooter.addEventListener('click', ()=>setStep(state.step-1));
+    nextBtnFooter.addEventListener('click', ()=>setStep(state.step+1));
+    playBtnFooter.addEventListener('click', playToggle);
+    resetBtnFooter.addEventListener('click', resetAll);
+
+    toolbarButtons.forEach(btn=>{
+      const act = btn.getAttribute('data-action');
+      if(act==='prevStep') btn.addEventListener('click', ()=>setStep(state.step-1));
+      if(act==='nextStep') btn.addEventListener('click', ()=>setStep(state.step+1));
+      if(act==='playPause') btn.addEventListener('click', playToggle);
+      if(act==='reset') btn.addEventListener('click', resetAll);
+    });
+
+    // 展开动画（requestAnimationFrame）
+    function tick(){
+      if(state.unwrapAnim.running && state.step===2){
+        const pathLen = tapeMeasure.getTotalLength();
+        state.unwrapAnim.t = Math.min(1, state.unwrapAnim.t + 0.02); // 动画进度
+        const offset = (1 - state.unwrapAnim.t) * pathLen;
+        tapeMeasure.style.strokeDashoffset = String(offset);
+      }else{
+        tapeMeasure.style.strokeDashoffset = tapeMeasure.getTotalLength();
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // 绑定拖拽事件
+    radiusHandle.addEventListener('pointerdown', onHandleDown);
+    svg.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    radiusHandle.addEventListener('keydown', onHandleKey);
+
+    // 初始化
+    drawGrid();
+    setStep(1);
+    refreshAll();
+    requestAnimationFrame(tick);
+
+    // 无障碍实时区
+    const live = document.createElement('div');
+    live.className = 'sr-live';
+    live.setAttribute('aria-live','polite');
+    live.textContent = '已加载：圆的周长与面积探索';
+    document.body.appendChild(live);
+  })();
+  </script>
+</body>
+</html>

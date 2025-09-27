@@ -1,0 +1,58 @@
+2025-09-21 01:19:44,961 - INFO - 开始对 /root/lanyun-fs/integrated_app.html 进行测试...
+2025-09-21 01:19:44,961 - INFO - 
+=== 尝试 1 ===
+2025-09-21 01:19:45,600 - INFO - 通过 Playwright 运行动态测试: http://127.0.0.1:8000/integrated_app.html
+2025-09-21 01:21:12,092 - INFO - ✅ 静态检查未发现问题
+2025-09-21 01:21:12,093 - INFO - ⚠️  浏览器警告:
+2025-09-21 01:21:12,093 - WARNING - [CONSOLE:WARNING] Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation
+2025-09-21 01:21:12,093 - INFO - 🧪 测试用例结果:
+2025-09-21 01:21:12,093 - INFO - [TEST:PASS] AnimationCanvas exists: selector exists
+2025-09-21 01:21:12,093 - INFO - [TEST:PASS] ControlPanel exists: selector exists
+2025-09-21 01:21:12,093 - ERROR - [TEST:FAIL] Cone volume numeric check: 检查执行异常: Page.wait_for_selector: Timeout 10000ms exceeded.
+Call log:
+waiting for locator("#volumeText") to be visible
+
+2025-09-21 01:21:12,093 - INFO - 测试通过率: 2/3 (66.7%)
+2025-09-21 01:21:12,093 - INFO - 📸 失败测试的截图:
+2025-09-21 01:21:12,093 - INFO -    Cone volume numeric check: test_screenshots/attempt1_2.png
+2025-09-21 01:21:12,097 - INFO - 
+部分动态检查未通过。
+2025-09-21 01:21:12,097 - INFO - 将尝试再次修复并重测...
+2025-09-21 01:21:12,898 - INFO - 
+=== 尝试 2 ===
+2025-09-21 01:21:13,541 - INFO - 通过 Playwright 运行动态测试: http://127.0.0.1:8000/integrated_app.html
+2025-09-21 01:22:39,662 - INFO - ✅ 静态检查未发现问题
+2025-09-21 01:22:39,663 - INFO - ⚠️  浏览器警告:
+2025-09-21 01:22:39,663 - WARNING - [CONSOLE:WARNING] Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation
+2025-09-21 01:22:39,663 - INFO - 🧪 测试用例结果:
+2025-09-21 01:22:39,663 - INFO - [TEST:PASS] AnimationCanvas exists: selector exists
+2025-09-21 01:22:39,663 - INFO - [TEST:PASS] ControlPanel exists: selector exists
+2025-09-21 01:22:39,663 - ERROR - [TEST:FAIL] Cone volume numeric check: 检查执行异常: Page.wait_for_selector: Timeout 10000ms exceeded.
+Call log:
+waiting for locator("#volumeText") to be visible
+
+2025-09-21 01:22:39,663 - INFO - 测试通过率: 2/3 (66.7%)
+2025-09-21 01:22:39,663 - INFO - 📸 失败测试的截图:
+2025-09-21 01:22:39,663 - INFO -    Cone volume numeric check: test_screenshots/attempt2_2.png
+2025-09-21 01:22:39,667 - INFO - 
+部分动态检查未通过。
+2025-09-21 01:22:39,667 - INFO - 将尝试再次修复并重测...
+2025-09-21 01:22:40,468 - INFO - 
+=== 尝试 3 ===
+2025-09-21 01:22:41,204 - INFO - 通过 Playwright 运行动态测试: http://127.0.0.1:8000/integrated_app.html
+2025-09-21 01:24:07,768 - INFO - ✅ 静态检查未发现问题
+2025-09-21 01:24:07,768 - INFO - ⚠️  浏览器警告:
+2025-09-21 01:24:07,768 - WARNING - [CONSOLE:WARNING] Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation
+2025-09-21 01:24:07,769 - INFO - 🧪 测试用例结果:
+2025-09-21 01:24:07,769 - INFO - [TEST:PASS] AnimationCanvas exists: selector exists
+2025-09-21 01:24:07,769 - INFO - [TEST:PASS] ControlPanel exists: selector exists
+2025-09-21 01:24:07,769 - ERROR - [TEST:FAIL] Cone volume numeric check: 检查执行异常: Page.wait_for_selector: Timeout 10000ms exceeded.
+Call log:
+waiting for locator("#volumeText") to be visible
+
+2025-09-21 01:24:07,769 - INFO - 测试通过率: 2/3 (66.7%)
+2025-09-21 01:24:07,769 - INFO - 📸 失败测试的截图:
+2025-09-21 01:24:07,769 - INFO -    Cone volume numeric check: test_screenshots/attempt3_2.png
+2025-09-21 01:24:07,773 - INFO - 
+部分动态检查未通过。
+2025-09-21 01:24:07,773 - INFO - 达到最大重试次数，停止尝试。

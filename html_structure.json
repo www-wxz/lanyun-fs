@@ -1,0 +1,36 @@
+{
+  "html_structure": {
+    "布局": "单页响应式布局，顶部标题与说明栏，中部主交互画布区域（SVG），右侧或下方为数值与步骤提示面板，底部为控制按钮与滑块",
+    "主要元素": [
+      "<header id=\"header\"> <h1 id=\"title\">探索圆的周长与面积</h1> <p id=\"subtitle\">通过拖拽、拆分与重组，直观理解 C=2πr 与 A=πr²</p> </header>",
+      "<main id=\"main\"> <div id=\"canvasWrap\"> <svg id=\"svgCanvas\" width=\"640\" height=\"480\" viewBox=\"0 0 640 480\" role=\"img\" aria-label=\"圆的实验画布\"></svg> </div> <aside id=\"sidePanel\"> <div id=\"values\"> <div class=\"valueRow\">半径: <span id=\"radiusValue\">50</span> px</div> <div class=\"valueRow\">周长 C: <span id=\"circValue\">—</span></div> <div class=\"valueRow\">面积 A: <span id=\"areaValue\">—</span></div> </div> <div id=\"hints\">交互提示将在此显示</div> </aside> </main>",
+      "<footer id=\"controls\"> <div id=\"stepControls\"> <button id=\"prevStep\">上一步</button> <button id=\"nextStep\">下一步</button> <button id=\"playPause\">播放</button> <button id=\"reset\">重置</button></div> <div id=\"paramControls\"> <label>半径 <input id=\"radiusSlider\" type=\"range\" min=\"20\" max=\"140\" value=\"50\"></label> <input id=\"radiusInput\" type=\"number\" min=\"20\" max=\"140\" value=\"50\"> </div> <div id=\"toggleControls\"> <label><input id=\"showFormula\" type=\"checkbox\"> 显示公式提示</label> <label>扇形数量 <input id=\"sectorsRange\" type=\"range\" min=\"4\" max=\"48\" value=\"12\"></label></div> </footer>"
+    ],
+    "控件": [
+      "prevStep (上一步)",
+      "nextStep (下一步)",
+      "playPause (播放/暂停)",
+      "reset (重置)",
+      "radiusSlider (半径滑块)",
+      "radiusInput (半径输入框)",
+      "showFormula (显示公式复选框)",
+      "sectorsRange (扇形数量滑块)",
+      "可拖拽的半径端点(handle) (svg #radiusHandle)"
+    ],
+    "SVG 结构建议": {
+      "背景网格": "<g id=\"grid\"></g>",
+      "圆与元素": "<g id=\"circleGroup\"> <circle id=\"circleMain\" /> <line id=\"radiusLine\" /> <circle id=\"radiusHandle\" /> </g>",
+      "周长演示": "<g id=\"unwrapGroup\" transform=\"translate(0,0)\"></g>",
+      "扇形分割": "<g id=\"sectorsGroup\"></g>",
+      "标注与刻度": "<g id=\"labels\"> <text id=\"labelR\"></text> <text id=\"labelC\"></text> <text id=\"labelA\"></text> </g>",
+      "动画辅助": "<g id=\"helper\"> <path id=\"tapeMeasure\"/> </g>"
+    }
+  },
+  "teaching_content": {
+    "一级主题": "图形与几何",
+    "二级主题": "图形 的认识与测量",
+    "年级": "5～6年级",
+    "课标要求": "探索圆的周长和面积计算公式。",
+    "基本实验活动": "探索圆的周长和面积计算公式"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "分级标题": [
+    "一级：整体页面与布局风格（响应式、扁平化、教育色彩）",
+    "二级：核心可视化画布与工具栏（交互控件、图形工具）",
+    "三级：辅助面板与教学引导（步骤、提示、公式显示）"
+  ],
+  "编号列表": [
+    "1. 页面布局建议：采用三栏响应式布局（顶部导航 + 左侧工具栏 + 中央画布 + 右侧步骤/反馈面板）。移动端切换为工具栏底部抽屉，右侧面板为折叠浮层。",
+    "2. 画布组件（CanvasArea / GeometryCanvas）：使用 SVG（推荐）或 HTML5 Canvas；SVG 便于绑定 DOM 事件与无损缩放；尺寸自适应容器，支持视口缩放与坐标转换。",
+    "3. 基础控件：工具栏按钮（选择、顶点移动、加点、删除、锁定基线）、数值输入器（base, height）、滑动器（动画速率）、撤销/重做、重置、示例加载、提交答案。",
+    "4. 形状显示：三角形、平行四边形、梯形均用可交互 SVG path/polygon 表示；顶点用可抓取的圆点（hit area >= 14px），边缘高亮与可拖拽手柄。",
+    "5. 公式与步骤面板（RightPanel）：显示公式、当前数值代入、逐步推导；支持展开/收起、复制LaTeX、语音播报按钮（无障碍）。",
+    "6. 可视化提示：当学生拖动顶点时，动态绘制高线（垂直于底边的虚线）、显示实时 base、height、area 数值标签，使用颜色编码（base：蓝，height：橙，area：绿色填充透明度）",
+    "7. 动画视觉效果：平滑缓动（cubic-bezier 或 ease-in-out），用于拼接/拆解动画、形状变换、提示闪烁；动画时禁止其他破坏性操作。",
+    "8. 响应式与无障碍：断点建议（≥1200px 三栏、768-1199px 两栏、<768px 单列）；键盘支持顶点微调（箭头键 + Shift 加大步长），ARIA 标签与高对比模式。",
+    "9. 组件化建议（便于 React/Vue 开发）：Design components: <GeometryCanvas />, <ToolBar />, <InspectorPanel />, <StepGuide />, <TeacherDashboard />。Props / Events: GeometryCanvas props: shapes, activeTool, gridOn, onVertexDragStart/Drag/End, onTransform; InspectorPanel props: selectedShape, onUpdateProp.",
+    "10. 视觉规范：配色参考（#2B7AEB 蓝、#F39C12 橙、#27AE60 绿、#E74C3C 错误）、图标统一使用 24px SVG，提示文本 14px，重点公式 18-20px。"
+  ],
+  "示意与实现参考": [
+    "示意1：主界面示意 — 左侧工具栏（选择/顶点移动/重复拼接工具），中间 SVG 画布显示一个可拖动三角形，右侧显示公式：Area = 1/2 × base × height，并实时代入数值。实现参考：GeometryCanvas 使用 viewBox 与 preserveAspectRatio，顶点拖动更新 state -> rerender SVG polygon 与高度计算函数。",
+    "示意2：拖动顶点时的实时高线与数值标签 — 用户拖动顶点，Canvas 计算该顶点到底边的垂直距离并绘制虚线，旁边浮动 label 显示 'h = 4.2 cm'。实现参考：计算垂足投影点（向量投影公式），在 SVG 上绘制 line，并在 transform 元素内添加小弹出框。",
+    "示意3：三角形拼成平行四边形动画 — 提供一个 '拼接演示' 按钮，点击后复制三角形反转并平移到相邻位置，平滑过渡显示并填充为平行四边形，同时右侧逐步演示 'Area_Triangle = 1/2 × Area_Parallelogram'。实现参考：使用 SVG transform + CSS transitions 或 requestAnimationFrame 动画控制，动画结束触发 onAnimationEnd 事件。",
+    "示意4：教师监控小组件（TeacherDashboard preview）— 显示学生当前步骤、提交时间、答案与解题时间分布。实现参考：教师仪表板以卡片形式展示，使用 WebSocket 或轮询获取学生实时事件。",
+    "实现参考要点：- 使用 SVG 元素便于绑定鼠标/触摸事件；- 顶点拖动用 pointer events，兼容触摸；- 动画期间冻结控件并展示进度与跳过按钮；- 提供组件文档（props、events、expected payloads）以便 Agent 集成。"
+  ]
+}

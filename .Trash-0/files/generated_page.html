@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>探索：圆的周长与面积</title>
+  <meta name="description" content="面向5～6年级的互动教学页：通过可交互的动画理解 C = πD 与 A = πr²，包含动画画布、控制面板与教学步骤。">
+</head>
+<body>
+  <header id="header" class="panel" role="banner">
+    <h1 id="title">探索：圆的周长与面积</h1>
+    <p id="subtitle">通过可交互的动画理解 C=πD 与 A=πr²</p>
+    <p id="meta" aria-hidden="true">主题：图形与几何 · 二级：图形 的认识与测量 · 年级：5～6年级</p>
+  </header>
+
+  <main id="main" role="main" aria-labelledby="title">
+    <section id="canvasArea" class="panel" aria-label="动画画布和可视化区域">
+      <svg id="svgCanvas" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="svgTitle svgDesc">
+        <title id="svgTitle">圆的可视化示意图</title>
+        <desc id="svgDesc">展示主圆、半径线、可拖拽把手、扇形分割和展开路径的 SVG 画布</desc>
+
+        <!-- 圆的主要分组 -->
+        <g id="circleGroup" transform="">
+          <!-- 主圆 -->
+          <circle id="mainCircle" cx="400" cy="250" r="80" fill="none" stroke="black" stroke-width="2"></circle>
+
+          <!-- 半径线 -->
+          <line id="radiusLine" x1="400" y1="250" x2="480" y2="250" stroke="black" stroke-width="2" />
+
+          <!-- 拖拽把手（供 JS 挂载）-->
+          <circle id="dragHandle" cx="480" cy="250" r="8" fill="#fff" stroke="#000" stroke-width="2" tabindex="0" aria-label="拖拽半径点"></circle>
+
+          <!-- 扇形分割组（可动态生成扇形 path） -->
+          <g id="sectorGroup" aria-hidden="false"></g>
+
+          <!-- 周长展开路径（用于展示 C 与 D 的关系） -->
+          <path id="unwrapPath" d="" fill="none" stroke="#888" stroke-width="2"></path>
+
+          <!-- SVG 内标注 -->
+          <text id="svgLabel_r" x="440" y="240" font-size="14" fill="#000" aria-hidden="true">r</text>
+          <text id="svgLabel_D" x="435" y="200" font-size="14" fill="#000" aria-hidden="true">D</text>
+        </g>
+      </svg>
+
+      <!-- 覆盖提示（用于显示简短操作提示或错误信息） -->
+      <div id="overlayHints" aria-hidden="true"></div>
+    </section>
+
+    <aside id="controls" class="panel" aria-label="控制面板与数值读数">
+      <div id="readouts" role="region" aria-live="polite" aria-label="数值读数">
+        <div class="readout">半径 r: <span id="read_r">3.00</span> cm</div>
+        <div class="readout">直径 D: <span id="read_d">6.00</span> cm</div>
+        <div class="readout">周长 C: <span id="read_c">18.85</span> cm</div>
+        <div class="readout">面积 A: <span id="read_a">28.27</span> cm²</div>
+      </div>
+
+      <div id="interactiveControls" aria-label="交互控件" role="region">
+        <div class="controlRow">
+          <label for="radiusSlider">调整半径：</label>
+          <input type="range" id="radiusSlider" min="20" max="160" value="80" aria-valuemin="20" aria-valuemax="160" aria-valuenow="80">
+        </div>
+
+        <div class="smallBtns" role="group" aria-label="辅助按钮">
+          <button id="dragToggle" class="btn" type="button" aria-pressed="false">拖拽半径点</button>
+          <button id="snapHalf" class="btn" type="button">半径=半宽</button>
+          <button id="resetBtn" class="btn primary" type="button">重置</button>
+        </div>
+
+        <div id="stepControls" class="stepControls" role="group" aria-label="步骤控制">
+          <button id="prevStep" class="btn" type="button">上一步</button>
+          <button id="nextStep" class="btn primary" type="button">下一步</button>
+          <button id="playPause" class="btn" type="button" aria-pressed="false">播放</button>
+        </div>
+
+        <div id="extraControls" class="small" role="group" aria-label="额外选项">
+          <label><input type="checkbox" id="showLabels" checked> 显示标注</label><br>
+          <label><input type="checkbox" id="showSectors" checked> 显示扇形分割</label><br>
+          <button id="revealFormula" class="btn accent" type="button">显示公式</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer id="footer" class="panel" role="contentinfo">
+    <section id="teachingPrompt" aria-label="教学提示">
+      <h2>教学提示与活动说明</h2>
+      <p><strong>基本实验活动：</strong>探索圆的周长和面积计算公式。</p>
+
+      <h3>学习目标</h3>
+      <ul>
+        <li>理解并能操控圆的基本要素：半径 r、直径 D、周长 C、面积 A</li>
+        <li>通过实验观察并推导 C 与 D 的关系（C = πD）</li>
+        <li>通过扇形重排直观证明 A = πr² 并能用公式进行计算</li>
+        <li>培养动手实验、记录与得出结论的习惯</li>
+      </ul>
+
+      <h3>评估建议</h3>
+      <ol>
+        <li>记录至少 3 次不同半径下的 C/D 并计算平均值，判断是否接近 π</li>
+        <li>使用扇形重排观察不同切分数下近似矩形的差异并解释</li>
+        <li>提交一次半径值及预测面积，比较实际计算值并写出 1-2 行观察结论</li>
+      </ol>
+    </section>
+
+    <nav aria-label="步骤导航">
+      <h3>步骤导航</h3>
+      <ol id="stepList" class="steps">
+        <li data-step="1">
+          准备：在画布上观察主圆，确认当前半径 r（可通过滑块或拖拽把手调整）。
+        </li>
+        <li data-step="2">
+          周长探索：记录多个不同 r 下的周长 C 与直径 D，计算 C/D 的比值并记录结果。
+        </li>
+        <li data-step="3">
+          扇形分割：打开“显示扇形分割”，增加切分数，观察并记录扇形重排后的近似矩形长度与高度。
+        </li>
+        <li data-step="4">
+          面积验证：根据重排观察，讨论并写出 A = πr² 的直观解释；使用公式计算并比对实际数值。
+        </li>
+        <li data-step="5">
+          总结与提交：完成评估建议中的记录表，并写出 1-2 行观察结论。
+        </li>
+      </ol>
+    </nav>
+  </footer>
+</body>
+</html>

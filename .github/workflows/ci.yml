@@ -1,0 +1,23 @@
+name: CI Test with Playwright
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.47.0-focal
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-playwright
+          playwright install --with-deps chromium
+
+      - name: Run tests
+        run: pytest -q --disable-warnings tests/

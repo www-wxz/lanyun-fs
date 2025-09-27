@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>教学任务交互界面</title>
+  <style>
+    body { margin:0; height:100vh; display:flex; font-family: sans-serif; }
+    .left { width:40%; border-right:1px solid #ccc; display:flex; flex-direction:column; }
+    .logs { flex:1; padding:10px; overflow:auto; background:#111; color:#0f0; font-family: monospace; white-space:pre-wrap; }
+    .input-area { display:flex; border-top:1px solid #ccc; }
+    input { flex:1; padding:10px; border:none; font-size:16px; }
+    button { padding:10px 20px; border:none; background:#2b7aeb; color:#fff; cursor:pointer; }
+    .right { flex:1; }
+    iframe { width:100%; height:100%; border:none; }
+  </style>
+</head>
+<body>
+  <div class="left">
+    <div class="logs" id="logs">等待输入...</div>
+    <div class="input-area">
+      <input id="query" placeholder="请输入查询文本...">
+      <button onclick="runQuery()">运行</button>
+    </div>
+  </div>
+  <div class="right">
+    <iframe id="preview"></iframe>
+  </div>
+
+  <script>
+    async function runQuery() {
+      const query = document.getElementById("query").value;
+      document.getElementById("logs").textContent = "▶️ 正在执行，请稍候...\n";
+
+      const res = await fetch("/run", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query})
+      });
+
+      const data = await res.json();
+      document.getElementById("logs").textContent = data.logs || JSON.stringify(data);
+
+      if (data.html_ready) {
+        document.getElementById("preview").src = "/preview";
+      } else {
+        document.getElementById("preview").srcdoc = "<h3>未生成 HTML</h3>";
+      }
+    }
+  </script>
+</body>
+</html>

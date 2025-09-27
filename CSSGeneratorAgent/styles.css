@@ -1,0 +1,339 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+:root{
+  --color-primary:#2E8BC0;
+  --color-secondary:#3FB0AC;
+  --color-accent:#F2C94C;
+  --color-success:#27AE60;
+  --color-warning:#F2994A;
+  --color-danger:#EB5757;
+  --bg:#FFFFFF;
+  --surface:#F7FCFF;
+  --muted:#6B7280;
+  --radius:8px;
+  --btn-height:44px;
+  --font-base:16px;
+  --font-title:22px;
+  --shadow-sm: 0 4px 10px rgba(46,139,192,0.12);
+  --shadow-md: 0 8px 18px rgba(46,139,192,0.14);
+  --svg-stroke: #0F172A;
+  --transition-fast: 200ms;
+  --transition-med: 320ms;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family: "Poppins", system-ui, -apple-system, "Noto Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-size:var(--font-base);
+  color:var(--svg-stroke);
+  background:linear-gradient(180deg,var(--surface),var(--bg));
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Layout */
+.app-layout{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+  padding:18px;
+}
+.app-panel{
+  background:transparent;
+}
+.side-panel{
+  width:34%;
+  min-width:260px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.main-panel{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* Responsive: stack on narrow screens */
+@media (max-width:768px){
+  .app-layout{flex-direction:column}
+  .side-panel{width:100%; min-width:unset}
+}
+
+/* Canvas wrapper maintains 4:3 ratio and is touch-friendly */
+.canvas-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:4/3;
+  border-radius:12px;
+  border:3px solid rgba(46,139,192,0.14);
+  background:linear-gradient(180deg, rgba(63,176,172,0.04), rgba(46,139,192,0.02));
+  box-shadow:var(--shadow-md);
+  padding:12px;
+  overflow:hidden;
+  touch-action:none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* SVG root */
+#svgCanvas, .svg-canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* Title & typography */
+.ui-title{
+  font-size:var(--font-title);
+  font-weight:600;
+  color:var(--color-primary);
+  line-height:1.1;
+  letter-spacing:0.2px;
+}
+
+/* Controls */
+.controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.btn{
+  height:var(--btn-height);
+  border-radius:var(--radius);
+  cursor:pointer;
+  user-select:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 14px;
+  font-weight:600;
+  transition:transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease, opacity var(--transition-fast) ease;
+  box-shadow:var(--shadow-sm);
+  border: none;
+  color:white;
+  background:linear-gradient(90deg,var(--color-primary),var(--color-secondary));
+}
+.btn:active{transform:translateY(1px) scale(0.997)}
+.btn:focus-visible{outline:3px solid rgba(63,176,172,0.22); outline-offset:3px; border-radius:var(--radius)}
+.btn-ghost{
+  background:transparent;
+  color:var(--color-primary);
+  border:2px solid rgba(46,139,192,0.12);
+  box-shadow:none;
+}
+
+/* Feedback color variants */
+.btn-success{background:linear-gradient(90deg,var(--color-success),#38b673)}
+.btn-warning{background:linear-gradient(90deg,var(--color-warning),#f7a94f)}
+.btn-danger{background:linear-gradient(90deg,var(--color-danger),#f06b6b)}
+
+/* Inputs */
+.input{
+  border-radius:10px;
+  padding:10px 12px;
+  min-height:44px;
+  background:white;
+  border:1px solid rgba(15,23,42,0.06);
+  box-shadow:0 4px 12px rgba(2,6,23,0.04);
+  font-size:15px;
+}
+.input:focus-visible{
+  outline:3px solid rgba(46,139,192,0.14);
+  outline-offset:2px;
+}
+
+/* Range / Slider */
+.range{
+  width:100%;
+  height:40px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+input[type="range"]{
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  height:18px;
+  background:transparent;
+}
+input[type="range"]::-webkit-slider-runnable-track{
+  height:8px;
+  background:linear-gradient(90deg, rgba(46,139,192,0.16), rgba(63,176,172,0.12));
+  border-radius:999px;
+}
+input[type="range"]::-moz-range-track{
+  height:8px;
+  background:linear-gradient(90deg, rgba(46,139,192,0.16), rgba(63,176,172,0.12));
+  border-radius:999px;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;
+  height:20px;
+  border-radius:999px;
+  margin-top:-6px;
+  background:linear-gradient(180deg,var(--color-primary),var(--color-secondary));
+  box-shadow:0 6px 14px rgba(46,139,192,0.18);
+  border:3px solid #fff;
+  transition:transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+}
+input[type="range"]::-moz-range-thumb{
+  width:20px;
+  height:20px;
+  border-radius:999px;
+  background:linear-gradient(180deg,var(--color-primary),var(--color-secondary));
+  box-shadow:0 6px 14px rgba(46,139,192,0.18);
+  border:3px solid #fff;
+}
+input[type="range"]:active::-webkit-slider-thumb{transform:scale(1.06)}
+input[type="range"]:focus-visible{outline:3px solid rgba(63,176,172,0.16); outline-offset:6px}
+
+/* Value display with fade/number transition */
+.value-display{
+  min-width:62px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-radius:8px;
+  background:rgba(47,139,192,0.06);
+  font-weight:600;
+  transition:opacity var(--transition-fast) ease, transform var(--transition-fast) ease;
+}
+.value-display.change{
+  animation: valueShift 320ms ease;
+}
+@keyframes valueShift{
+  0%{opacity:0; transform:translateY(-6px) scale(0.98)}
+  100%{opacity:1; transform:translateY(0) scale(1)}
+}
+
+/* Tooltip */
+.tooltip{
+  pointer-events:none;
+  position:absolute;
+  background:linear-gradient(180deg,#fff,rgba(255,255,255,0.96));
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:14px;
+  color:var(--svg-stroke);
+  box-shadow:var(--shadow-md);
+  transition:opacity var(--transition-fast) ease, transform var(--transition-fast) ease;
+  opacity:0;
+  transform:translateY(6px) scale(0.98);
+  will-change:opacity,transform;
+}
+.tooltip.show{opacity:1; transform:translateY(0) scale(1)}
+
+/* SVG interactive elements */
+.svg-node{ cursor:grab; touch-action:none; }
+.svg-node:active{ cursor:grabbing; }
+.svg-node circle{
+  fill:#ffffff;
+  stroke:var(--color-primary);
+  stroke-width:2;
+  transition:transform var(--transition-fast) ease, stroke-width var(--transition-fast) ease, filter var(--transition-fast) ease;
+  transform-origin:center;
+}
+.svg-node:hover circle, .svg-node:focus-visible circle{
+  transform:scale(1.08);
+  filter:drop-shadow(0 6px 14px rgba(46,139,192,0.12));
+}
+.svg-node:focus-visible circle{ outline:3px solid rgba(63,176,172,0.16); outline-offset:4px }
+
+/* Arc / sector styles */
+.arc, .sector{ transition:stroke-width var(--transition-fast) ease, stroke var(--transition-fast) ease, opacity var(--transition-med) ease, transform var(--transition-med) ease; transform-origin:center; }
+.arc{ stroke:var(--color-primary); stroke-width:2; fill:none }
+.sector{ fill:linear-gradient(90deg,var(--color-primary),var(--color-secondary)); opacity:0.95 }
+
+/* Dragging highlight: stroke-width from 2 -> 4 and accent color */
+.dragging .arc, .dragging .sector, .dragging path, .dragging circle{
+  stroke-width:4 !important;
+  stroke:var(--color-secondary) !important;
+  transition:stroke-width 160ms ease, stroke 160ms ease;
+}
+
+/* Node hover/focus emphasis */
+.node-active circle, .node-current circle{
+  transform:scale(1.12);
+  filter:drop-shadow(0 10px 22px rgba(63,176,172,0.16));
+  stroke:var(--color-secondary);
+}
+
+/* Current operation highlight / flash */
+.flash{
+  animation: flashPulse 900ms ease-in-out infinite;
+}
+@keyframes flashPulse{
+  0%{opacity:1; transform:scale(1)}
+  50%{opacity:0.8; transform:scale(1.02)}
+  100%{opacity:1; transform:scale(1)}
+}
+
+/* Sector rearrange animation */
+.rearrange-animation{
+  transition:transform 420ms ease-out, opacity 360ms ease-out;
+}
+.rearrange-animation.enter{ opacity:0; transform:translateY(-10px) scale(0.98) }
+.rearrange-animation.enter-active{ opacity:1; transform:translateY(0) scale(1) }
+
+/* String straighten animation (path morph hint) */
+.straighten-animation{
+  transition:stroke-dashoffset 520ms cubic-bezier(.22,.9,.24,1), opacity 420ms ease;
+}
+
+/* axis & guide lines */
+.grid-line{ stroke:#e6f3f7; stroke-width:1; opacity:0.9; vector-effect:non-scaling-stroke; }
+
+/* accessible live region */
+.sr-live{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden }
+
+/* focus ring for sliders and buttons */
+.focus-ring:focus-visible{ outline:4px solid rgba(46,139,192,0.14); outline-offset:3px; border-radius:8px }
+
+/* small helpers */
+.kv-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hint{font-size:13px;color:var(--muted);}
+
+/* Ensure contrast for labels and interactive text */
+.label{
+  font-size:14px;
+  color:rgba(15,23,42,0.88);
+  font-weight:600;
+}
+
+/* High-contrast variant for readability */
+.high-contrast{
+  color:#07122b;
+  background:linear-gradient(180deg,#fff,#f7fcff);
+  box-shadow:0 6px 18px rgba(7,18,43,0.06);
+}
+
+/* Utility for emphasis badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 8px;
+  border-radius:999px;
+  background:rgba(242,201,76,0.12);
+  color:var(--color-accent);
+  font-weight:700;
+  font-size:13px;
+}
+
+/* SVG element defaults for crisp visuals on touch displays */
+svg{touch-action:none; -webkit-user-select:none; -ms-user-select:none; user-select:none}
+
+/* ARIA visible focus helpers for interactive SVG elements */
+[role="button"]:focus-visible, .svg-node:focus-visible{ outline:none; box-shadow:0 6px 18px rgba(46,139,192,0.12); border-radius:6px }
+
+/* Small-screen adjustments for controls to remain large & touch friendly */
+@media (max-width:480px){
+  .btn{height:48px; padding:0 16px}
+  .input{min-height:48px}
+  .value-display{min-width:56px; font-size:15px}
+}

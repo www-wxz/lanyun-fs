@@ -1,0 +1,132 @@
+{
+  "html_structure": {
+    "布局": "单页面响应式布局：顶部标题区 -> 左侧教学说明与步骤提示 -> 右侧主交互画布（SVG） -> 底部控制栏（按钮和滑块）",
+    "主要元素": [
+      "<header id=\"header\"> <h1 id=\"title\">探索圆的周长与面积</h1> <p id=\"subtitle\">通过交互实验理解 C=2πr 和 A=πr²</p> </header>",
+      "<main id=\"main\"> <aside id=\"instructions\"> <ol id=\"stepList\"></ol> <div id=\"hintBox\"></div> </aside> <section id=\"canvasArea\"> <svg id=\"svgc\" viewBox=\"0 0 800 500\" preserveAspectRatio=\"xMidYMid meet\"></svg> </section> </main>",
+      "<footer id=\"controls\"> <div id=\"leftControls\"> <button id=\"startBtn\" class=\"controlBtn\">开始</button> <button id=\"nextBtn\" class=\"controlBtn\">下一步</button> <button id=\"pauseBtn\" class=\"controlBtn\">暂停</button> <button id=\"resetBtn\" class=\"controlBtn\">重置</button> </div> <div id=\"rightControls\"> <label>半径: <input id=\"radiusSlider\" type=\"range\" min=\"20\" max=\"180\" value=\"80\"></label> <span id=\"radiusValue\">80 px</span> <label>扇形数: <input id=\"slicesSlider\" type=\"range\" min=\"4\" max=\"60\" value=\"8\"></label> <span id=\"slicesValue\">8</span> <button id=\"unwrapBtn\" class=\"controlBtn\">展开周长实验</button> <button id=\"rearrangeBtn\" class=\"controlBtn\">分割并重排（面积）</button> </div> </footer>"
+    ],
+    "控件": [
+      "开始(startBtn)",
+      "下一步(nextBtn)",
+      "暂停(pauseBtn)",
+      "重置(resetBtn)",
+      "半径滑块(radiusSlider)",
+      "扇形数滑块(slicesSlider)",
+      "展开周长实验(unwrapBtn)",
+      "分割并重排(rearrangeBtn)",
+      "可拖拽半径控制点(radiusHandle)",
+      "可拖拽圆心(centerHandle)"
+    ],
+    "SVG 主要图元说明": {
+      "circle": "id='circle' 圆主体，跟随半径变化",
+      "radiusLine": "id='radiusLine' 从圆心到半径控制点，显示 r 值",
+      "radiusHandle": "id='radiusHandle' 圆上可拖拽点，用于调整半径（触摸/鼠标事件）",
+      "centerHandle": "id='centerHandle' 可拖动圆心位置",
+      "perimeterPath": "id='perimeterPath' 用于周长展开动画（用一条线段或曲线模拟展开的弧）",
+      "wedgeGroup": "id='wedgeGroup' 扇形集合，用于分割圆并重排",
+      "approxBlock": "id='approxBlock' 用于显示重排后近似矩形/平行四边形",
+      "labels": "动态文本元素：id='rLabel', 'dLabel', 'cLabel', 'aLabel' 显示数值与公式",
+      "helperGrid": "辅助直尺与网格，用于测量感知"
+    },
+    "步骤提示(stepList 初始内容)": [
+      "步骤 1：拖动半径控制点或使用半径滑块改变圆的大小，观察 r、d、C、A 的实时变化。",
+      "步骤 2：点击“展开周长实验”，把圆的周长想象成一条可以拉直的绳子，观察与直径的关系。",
+      "步骤 3：点击“分割并重排”，把圆分成若干扇形并重排列成近似矩形，比较面积与 A=πr² 的关系。",
+      "步骤 4：调整扇形数，观察重排后图形如何接近真正的矩形，思考极限情况（扇形数越多越接近）。"
+    ]
+  },
+  "css_plan": {
+    "整体风格": "明亮、卡通、教育友好，圆润按钮与大号可点击控件，视觉聚焦交互元素，适合 5～6 年级学生",
+    "主色调与字体": "主色调：蓝(#2B9ED9)、绿(#2EC4B6)、橙(#FFB703)；背景 #F6FBFF。字体：圆润无衬线（如 'Noto Sans','Arial Rounded'），正文 16px~18px，标题 22px~28px。",
+    "布局样式": "顶部居中标题，主区左右分栏（说明 30% / 交互 70%），底部控制栏固定在视口底部或浮动以便手机操作",
+    "按钮样式": {
+      "通用": "圆角 10px，阴影轻微，hover 改变亮度，active 有缩放反馈",
+      "主要操作按钮(controlBtn)": "背景渐变（蓝->绿），白色文字，padding 10px 14px，最小宽度 64px"
+    },
+    "SVG 与画布样式": "SVG 背景白色，带柔和阴影和细节网格。可交互元素（radiusHandle, centerHandle）为可见大圆点（8~12px），拖拽时放大并改变颜色为橙色。",
+    "高亮与过渡": [
+      "拖拽顶点时高亮相关边与标签（stroke-width 增加，颜色变为橙色）",
+      "数值/标签变更使用平滑过渡（transition: all 150ms ease）",
+      "步骤切换时当前步骤用淡黄色背景高亮 hintBox 并闪烁一次（短动画）"
+    ],
+    "响应式与可触控优化": "控制大小随屏宽缩放，滑块和按钮在触摸设备上增大触控面积（min-height:44px），所有交互支持触屏事件样式（:active）"
+  },
+  "js_plan": {
+    "总体说明": "使用 SVG + 原生 JS (推荐 requestAnimationFrame 管理动画)。可选引入 GSAP（动画平滑）作为增强。事件支持鼠标与触控。脚本分为模块：state 管理、DOM/SVG 操作、交互事件、动画控制、教学提示。",
+    "主要状态与数据模型": {
+      "state": {
+        "mode": "idle|running|paused",
+        "stepIndex": 0,
+        "radius": 80,
+        "center": {
+          "x": 400,
+          "y": 250
+        },
+        "slices": 8,
+        "isUnwrapped": false,
+        "isRearranged": false
+      },
+      "constants": {
+        "pxToUnit": "视图像素即长度单位（教学中提示：像素代表厘米的比例，便于测量示意）",
+        "pi": "Math.PI"
+      }
+    },
+    "核心函数与职责": {
+      "init()": "初始化 SVG 元素、绑定事件、渲染初始圆与标签、渲染步骤提示",
+      "renderCircle()": "根据 state.radius 与 state.center 更新 circle, radiusLine, radiusHandle，并更新 r、d、C、A 标签",
+      "formatNumber(val)": "格式化数值到小数点后 2 位（教学上可显示更多位）",
+      "updateLabels()": "更新 rLabel (r px), dLabel (2r), cLabel (2πr), aLabel (πr²)，并使用单位提示",
+      "bindControls()": "绑定按钮、滑块、步骤列表点击事件",
+      "enableDrag(handleId, onMove)": "通用拖拽函数，支持 touch/mouse，调用 onMove 更新 state 并 render",
+      "startStepAnimation()": "按 stepIndex 执行相应的演示动画（例如展开周长、分割并重排）",
+      "unwrapPerimeterAnimation()": "实现周长展开：把 circle 的周长以若干小弧段映射到一条直线上（perimeterPath），播放将弧段沿路径平移并连接的动画；显示实测长度与 2πr 的对比；在动画结束显示公式 C=πd 与 C=2πr",
+      "sliceAndRearrangeAnimation()": "分割圆为 N 个扇形（state.slices），将扇形依次移动并旋转排列成近似矩形；动画过程中高亮每一片，实时计算重排宽与高并比较面积；随着 slices 增大，展示矩形高度接近 r，宽度接近 πr；最终显示 A≈πr²",
+      "playbackControl()": "控制 requestAnimationFrame 循环，支持 pause/resume/reset 与 step 跳转",
+      "highlight(elementId, options)": "高亮指定 SVG 元素（stroke、fill、动画脉冲），并在 hintBox 显示教学提示",
+      "safetyCheck()": "限制半径与扇形数，确保性能（slices 最大 60），移动时防止超出 SVG 视口"
+    },
+    "事件绑定": [
+      "radiusSlider input -> 更新 state.radius, renderCircle, updateLabels",
+      "slicesSlider input -> 更新 state.slices, 更新 slicesValue 标签",
+      "radiusHandle drag -> 更新 radius (基于鼠标/触摸位置与中心距离), renderCircle, updateLabels",
+      "centerHandle drag -> 更新 center, renderCircle",
+      "startBtn click -> state.mode = 'running', startStepAnimation 或自动播放当前 step",
+      "nextBtn click -> stepIndex++ 并调用 startStepAnimation（逐步教学）",
+      "pauseBtn click -> 暂停当前动画（请求帧停止）",
+      "resetBtn click -> 恢复初始 state 并清理动画/标签",
+      "unwrapBtn click -> 触发 unwrapPerimeterAnimation",
+      "rearrangeBtn click -> 触发 sliceAndRearrangeAnimation",
+      "window resize -> 调整 SVG viewBox 与元素缩放（responsive）"
+    ],
+    "动画与数值实时更新细节": [
+      "在拖拽或滑块调整时，每帧计算并显示：半径 r (px), 直径 d = 2r, 周长 C = 2*Math.PI*r, 面积 A = Math.PI*r*r。标签以动画渐变更新并伴随简短提示（如“观察：C 随 r 线性变化”）",
+      "周长展开实现方式：将圆周分为 M 段（M 可与 slices 相关），把每段弧的路径映射到直线段并用动画平滑移动；同时在直线尺上绘制刻度，显示总长度并在动画结束时标出 2πr 的位置",
+      "分割并重排实现方式：用 SVG path 生成扇形（path），每个扇形在动画中先从圆心外移并旋转到目标位置形成条形排列；计算排列后总体宽度 W 与高度 H：近似 W ≈ πr，H ≈ r；计算重排面积 W*H 与 πr² 的差值并显示误差百分比",
+      "数值精度：展示两位小数，提供“更多信息”按钮可展开到 4 位小数（教学延展）",
+      "逐步教学控制：每步有超时自动推进（可通过 pauseBtn 阻止），也可手动点击下一步"
+    ],
+    "教学引导反馈": [
+      "在每一步动画开始和结束时，hintBox 给出引导性问题（例如“你看到当半径加倍时，周长怎样变化？为什么？”）",
+      "当学生调整参数时，自动弹出小提示鼓励观察（例如“增加扇形数后，重排形状更像一个矩形——这说明什么？”）",
+      "当重排面积与 πr² 的差异小于阈值时，显示奖励动画（星星或勋章）并说明“看！这就是面积公式成立的直观理由”"
+    ],
+    "性能与兼容性": {
+      "renderFrequency": "拖拽和滑块调整时以 requestAnimationFrame 限制更新频率，动画平滑且节能",
+      "touchSupport": "所有拖拽与点击事件同时绑定 touchstart/touchmove/touchend 以支持平板与手机",
+      "库可选性": "推荐用原生实现以便教学代码可读；对于更平滑的动画可选 GSAP（TweenLite）并在 JSON 注明兼容性"
+    },
+    "示例伪代码片段": {
+      "renderLabels": "rLabel.textContent = `r = ${formatNumber(r)} px`; cLabel.textContent = `C = ${formatNumber(2*Math.PI*r)} px`",
+      "unwrapLogic": "for each arcSegment -> compute length = r * angle; map to straight segment offset; animate position with requestAnimationFrame",
+      "sliceRearrangeLogic": "for i in 0..N-1 -> compute wedge path, compute target translate/rotate to alternate up/down positions, animate; compute approxWidth = π*r, approxHeight = r"
+    }
+  },
+  "teaching_content": {
+    "一级主题": "图形与几何",
+    "二级主题": "图形 的认识与测量",
+    "年级": "5～6年级",
+    "课标要求": "探索圆的周长和面积计算公式。",
+    "基本实验活动": "探索圆的周长和面积计算公式"
+  }
+}

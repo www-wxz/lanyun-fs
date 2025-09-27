@@ -1,0 +1,210 @@
+{
+  "html_structure": {
+    "布局": "单页面，顶部标题与教学提示，中间左侧为 SVG 互动画布与可触控图形，右侧为步骤面板与数值显示，底部为控制按钮与滑块",
+    "主要元素": [
+      "<header id='header'><h1 id='title'>探索圆的周长与面积</h1><div id='subTitle'>通过拖拽、展开与分割演示，理解 C=2πr 与 A=πr²</div></header>",
+      "<main id='main'>",
+      "  <section id='canvasSection'>",
+      "    <svg id='svgCanvas' viewBox='0 0 800 500' preserveAspectRatio='xMidYMid meet'></svg>",
+      "  </section>",
+      "  <aside id='panel'>",
+      "    <div id='stepPanel'></div>",
+      "    <div id='valuePanel'></div>",
+      "    <div id='hintPanel'></div>",
+      "  </aside>",
+      "</main>",
+      "<footer id='controls'>",
+      "  <div id='buttons'>",
+      "    <button id='btnPrev' class='control'>上一步</button>",
+      "    <button id='btnNext' class='control primary'>下一步</button>",
+      "    <button id='btnPlay' class='control'>播放</button>",
+      "    <button id='btnPause' class='control'>暂停</button>",
+      "    <button id='btnReset' class='control danger'>重置</button>",
+      "  </div>",
+      "  <div id='sliders'>",
+      "    <label>半径: <input id='radiusSlider' type='range' min='30' max='160' value='80'></label>",
+      "    <label>切片数: <input id='slicesSlider' type='range' min='4' max='64' step='2' value='12'></label>",
+      "  </div>",
+      "  <div id='toggles'>",
+      "    <label><input id='showLabels' type='checkbox' checked> 显示标注</label>",
+      "    <label><input id='showUnwrapGuide' type='checkbox' checked> 展开引导线</label>",
+      "  </div>",
+      "</footer>"
+    ],
+    "控件": [
+      "btnPrev (上一步)",
+      "btnNext (下一步)",
+      "btnPlay (播放自动演示)",
+      "btnPause (暂停)",
+      "btnReset (重置)",
+      "radiusSlider (半径滑块，拖动改变 r)",
+      "slicesSlider (切片数滑块，改变 sector 数)",
+      "showLabels (切换显示 r, d, C 等标签)",
+      "showUnwrapGuide (切换展示展开过程引导)"
+    ],
+    "步骤定义": [
+      "step0_intro: 显示圆与半径控制，提示学生拖动半径观察变化",
+      "step1_circumference_measure: 演示用“量绳”沿圆周测量并显示长度",
+      "step2_unwrap_compare: 将测得的圆周展开为直线，和直径比较并计算比值",
+      "step3_formula_circumference: 显示 C = 2πr 的推导与数值验证",
+      "step4_slice_circle: 将圆分成若干扇形并实时调整扇形数量",
+      "step5_rearrange_sectors: 扇形重排为近似矩形，显示底边为 C/2，高为 r",
+      "step6_formula_area: 推导 A = πr² 并用数值动画验证",
+      "step7_conclude: 展示总结并给出练习题与探索方向"
+    ],
+    "响应式与无障碍": "SVG 布局自适应宽度，按钮有 aria-label，滑块支持键盘，移动端支持触摸事件"
+  },
+  "css_plan": {
+    "整体风格": "明亮、卡通、教育友好，适合 5～6年级学生。使用圆润元素、柔和阴影、适度动画缓动",
+    "颜色方案": {
+      "主色": "#2E86AB (蓝)",
+      "强调色": "#F6A623 (黄橙)",
+      "辅助色": "#3BB273 (绿)",
+      "背景色": "#F7FBFF",
+      "文本色": "#12343B"
+    },
+    "字体与尺寸": "圆润无衬线字体（如 Noto Sans / system-ui），标题 20-24px，正文与标签 14-16px，面板数字 18-22px",
+    "布局样式": "顶部固定标题，主区域左右布局：SVG 70% 宽，控制面板 30% 宽。底部控制区固定高度，按钮统一圆角 8px",
+    "按钮样式": {
+      "常规": "圆角、阴影、hover 颜色加深、按下有缩放 0.96",
+      "primary": "主色背景白色文字，突出下一步/播放",
+      "danger": "重置为浅红色，带确认提示"
+    },
+    "动画样式": [
+      "拖拽顶点时高亮边与点：描边宽度增至 3px，颜色变为强调色",
+      "数值变化渐变过渡：数字变更应用 200ms ease 动画",
+      "扇形重排使用平移与旋转过渡，过渡时间 600ms",
+      "展开圆周时直线从圆边滑出，使用 path morphing 效果（SVG path transition）",
+      "高亮当前步骤面板项，使用背景淡色与放大标记"
+    ],
+    "辅助样式": {
+      "标签badge": "圆角边框与半透明背景，用于显示 r, d, C, A",
+      "测量尺视觉": "带刻度动画条，刻度按比例显示",
+      "提示气泡": "淡黄色背景，带小箭头，出现/消失有淡入淡出"
+    }
+  },
+  "js_plan": {
+    "总体架构": "模块化 JS，主要模块有: svgRenderer、interactionController、animator、mathModel、uiController。使用 requestAnimationFrame 驱动动画，支持可选 GSAP 平滑动画",
+    "初始化流程": [
+      "init(): 绑定 DOM、创建 SVG 元素（circle, handles, labels, tape path, sectors group）",
+      "setupEventListeners(): 绑定按钮、滑块、拖拽与触摸事件，设置键盘快捷键"
+    ],
+    "核心数据模型 (mathModel)": {
+      "state": {
+        "radiusPx": 80,
+        "scale": 1,
+        "slices": 12,
+        "stepIndex": 0,
+        "playing": false,
+        "showLabels": true,
+        "showUnwrapGuide": true
+      },
+      "单位映射": "像素 -> 数学单位支持（可配置比例，例如 1 px = 1 mm 或 1 px = 1 cm），用于在右侧面板显示现实世界量",
+      "计算函数": [
+        "computeDiameter(r) => d = 2*r",
+        "computeCircumference(r) => C = 2 * PI * r",
+        "computeArea(r) => A = PI * r * r",
+        "computeRatio(C, d) => C/d (展示接近 π 的值)"
+      ]
+    },
+    "svgRenderer": {
+      "元素列表": [
+        "circleMain: <circle id='mainCircle'>",
+        "radiusLine: <line id='radiusLine'>",
+        "radiusHandle: <circle id='radiusHandle'> (用于拖拽改变半径)",
+        "diameterLine: <line id='diameterLine'> (可选显示)",
+        "tapePath: <path id='tapePath'> (表示测量绳或展开线)",
+        "sectorsGroup: <g id='sectorsGroup'> (包含扇形 paths)",
+        "rearrangedGroup: <g id='rearrangedGroup'> (扇形重排)",
+        "labels: <text> 元素用于 r, d, C, A 显示",
+        "guideLines & ruler: 用于测量视觉辅助"
+      ],
+      "绘制规则": "每次 state 变化调用 render()：更新 circle radius、handle 位置、扇形角度、tapePath 路径与文本位置。渲染应最小化 DOM 更新（只更新变更的属性）"
+    },
+    "interactionController": {
+      "拖拽逻辑": [
+        "radiusHandle mousedown/touchstart => capture pointer, set dragging=true",
+        "mousemove/touchmove => if dragging, 计算新 radius（基于中心点到指针距离），限制最小/最大，更新 state.radiusPx 并调用 render 与 computeValues",
+        "mouseup/touchend => dragging=false，记录交互事件用于提示"
+      ],
+      "按钮绑定": [
+        "btnNext => stepIndex++ 并触发 playStep(stepIndex)",
+        "btnPrev => stepIndex-- 并触发 playStep(stepIndex)",
+        "btnPlay => playing=true, 自动按步骤播放（setInterval 或 requestAnimationFrame 工作队列）",
+        "btnPause => playing=false",
+        "btnReset => 恢复初始 state 并重绘"
+      ],
+      "滑块绑定": [
+        "radiusSlider.oninput => 直接设置 state.radiusPx 并 render，实时显示数值",
+        "slicesSlider.oninput => 更新 state.slices，调用 rebuildSectors() 并触发重排动画（如果处于重排步骤）"
+      ],
+      "切换绑定": [
+        "showLabels => 显示/隐藏 label 元素",
+        "showUnwrapGuide => 显示/隐藏辅助引导线"
+      ],
+      "键盘无障碍": "左右切换步骤，空格播放/暂停，Enter 激活下一步"
+    },
+    "animator (动画逻辑)": {
+      "step动画描述": {
+        "step0_intro": "平滑缩放出现圆与半径 handle，提示气泡引导拖拽",
+        "step1_circumference_measure": "生成 tapePath 沿圆周滚动一段并计长器显示当前长度（通过沿 path 采样累计弧长）",
+        "step2_unwrap_compare": "用 path morphing 将沿圆周的 tapePath 变形为直线，显示直线长度数值并与直径叠加比较，实时显示比例 C/d",
+        "step3_formula_circumference": "弹出公式卡片 C=2πr，渐显 π≈3.14 的计算过程并用当前 r 验证",
+        "step4_slice_circle": "将圆分成 state.slices 个扇形并逐个高亮，滑块改变 slices 时更新扇形角并做入场过渡",
+        "step5_rearrange_sectors": "扇形动画移动并交替排列形成近似矩形：每个扇形旋转并平移到排列位置，动画时间 600-900ms，最终展示底边近似 C/2，高度近似 r",
+        "step6_formula_area": "在重排矩形上动态标注底边与高，计算并展示 A = (C/2)*r => A = πr²，右侧 panel 同步显示数值和单位",
+        "step7_conclude": "总结卡片和练习题出现，邀请学生改变 r 或 slices 再次验证"
+      },
+      "动画实现细节": [
+        "使用 requestAnimationFrame 做连续值动画（例如 tape 移动），重大状态转换使用 GSAP 或 CSS transitions（扇形平移/旋转）",
+        "路径展开使用预计算的圆弧点序列并映射到直线点序列，插值过渡实现平滑展开",
+        "数值显示使用 tweening（从旧值过渡到新值）以便学生容易观察变化"
+      ]
+    },
+    "交互反馈与教学引导": {
+      "引导提示": [
+        "在每一步开始显示简短任务提示（例如：请拖动半径到 100，然后观察圆周长度）",
+        "当学生完成交互（如拖到某值或播放完动画）显示 ‘观察到什么？’ 的问题提示",
+        "提供即时反馈：如果学生测量到的 C/d 接近 π，给出表扬并说明误差来源"
+      ],
+      "错误容忍与提示": "当学生将半径设为极小或极大，给出提示限制并建议合理数值范围",
+      "可探索任务": [
+        "让学生尝试不同半径并记录 C 与 r 的关系",
+        "增加扇形数观察重排矩形逼近程度"
+      ]
+    },
+    "数值与展示": {
+      "实时更新": "右侧 valuePanel 显示 r, d, C, A，单位（像素与实际单位换算）并在 slider/drag 时实时刷新",
+      "精度与格式": "显示到小数点后一位或两位（当数值 < 10 时保留两位），并显示 π 的近似值与误差百分比",
+      "测量工具": "可切换现实单位（cm/m）与标尺显示，方便课堂讨论"
+    },
+    "辅助函数与工具": [
+      "sampleArcLength(path, tStep) => 近似弧长计算",
+      "createSectorPath(cx, cy, r, startAngle, endAngle) => 返回 SVG path",
+      "rearrangePositionsForSectors(n, baseX, baseY) => 计算重排目标位置",
+      "tweenNumber(start, end, duration, onUpdate, onComplete) => 数字过渡"
+    ],
+    "性能与兼容性": "尽量减少 DOM 操作、使用 transform 与 opacity 做动画，移除不必要重绘。支持主流桌面与移动浏览器，触控事件与鼠标事件都绑定",
+    "测试与调试": "内置 debug 模式显示所有计算中间值（可在课堂演示时关闭），并提供导出当前配置的功能（JSON）以方便教师记录"
+  },
+  "teaching_content": {
+    "一级主题": "图形与几何",
+    "二级主题": "图形 的认识与测量",
+    "年级": "5～6年级",
+    "课标要求": "探索圆的周长和面积计算公式。",
+    "基本实验活动": "探索圆的周长和面积计算公式",
+    "教学目标": [
+      "理解并能用交互实验观察圆的周长与半径/直径之间的关系（C 与 r/d 的关系）",
+      "通过展开圆周与比较直径来感知 π 的含义并近似求值",
+      "通过将圆分扇形重排来形象理解面积公式 A = πr²",
+      "培养学生的观察、猜想与验证能力，以及动手操作与数值分析能力"
+    ],
+    "课堂流程建议": [
+      "预热 (5 min): 引入圆的日常例子并提问‘你怎样测量一个锅盖的周长？’",
+      "操作 (20-25 min): 学生使用界面拖动半径、测量周长、展开并比较，调整切片数观察重排",
+      "讨论 (10 min): 汇总 C/d 的观测值、讨论误差并引出 C=2πr 与 A=πr²",
+      "拓展 (5-10 min): 提出习题（例如：给定 r=7 cm，求 C 与 A），或让学生用不同单位验证结论"
+    ],
+    "课堂产出": "学生能够用交互工具测出多个半径下的 C 与 A，记录数据并写出结论（C=2πr, A=πr²）"
+  }
+}

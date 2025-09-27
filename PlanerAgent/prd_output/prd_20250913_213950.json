@@ -1,0 +1,73 @@
+{
+  "ui_design": {
+    "分级标题": [
+      "基础：引入界面与直观演示",
+      "中级：数据输入、可视化与对比视图",
+      "提升：响应式仪表盘与教师视角控件"
+    ],
+    "编号列表": [
+      "1. 页面总体布局：顶部标题栏（课程、主题、当前活动进度），左侧为工具栏（数据输入、示例数据、提示），中间为主互动区（可视化画布），右侧为辅助面板（步骤提示、计算过程、历史记录）。",
+      "2. 关键组件清单：DataEntryPanel、SampleDataLibrary、DotPlotCanvas、BarChartComponent、EqualizeAnimationCanvas、CalculationStrip、HintPanel、TeacherDashboardWidget、ScoreBadge、ProgressStepper、MobileBottomControls。",
+      "3. 视觉与风格：使用明晰与儿童友好的配色（高对比、去饱和）、大号可触控按钮、图形化图标。文字应支持放大；图形元素（点、箱子、人物）使用矢量（SVG）便于动画与无损缩放。",
+      "4. 图形显示要求：主互动区支持 SVG/Canvas 混合渲染。DotPlot 使用可拖拽的圆点；EqualizeAnimation 使用分组动画将物体从不均匀分布平分到若干堆（代表平均值）；BarChart 支持逐步构建动画（柱子从 0 生长到高度）。",
+      "5. 动画视觉效果：分配/重分配采用平滑位移（duration 400–800ms）；数值变化采用计数器动画（duration 300–500ms）；当学生完成正确操作，播放鼓励微交互（弹跳徽章、星星粒子短动画）。",
+      "6. 响应式设计：主布局采用栅格与弹性容器。移动端优先展示主互动区和底部操作栏，工具栏折叠为可切换面板。所有交互必须在小屏上可单指操作，触控目标 >= 44px。",
+      "7. 无障碍与本地化：组件支持键盘操作、ARIA 标签、颜色对比比率 >= 4.5。文本、提示与语音反馈可切换语言与朗读开关。",
+      "8. 组件可复用性：设计 API 明确（props/state），便于 React/Vue 实现（示例组件 prop 列表在实现参考中给出）。"
+    ],
+    "示意与实现参考": [
+      "示意 1 — 主界面线框：顶部：课程名 + 步骤进度；左侧工具栏（DataEntryPanel：手动输入 / 导入 / 随机生成）=> 中央：DotPlotCanvas（SVG，每个点带 id、value、draggable）；右侧 CalculationStrip（显示 N、Sum、Mean 动态计算）与 HintPanel。",
+      "实现参考 1 — DataEntryPanel（React/Vue 组件建议）：props: { initialData: number[], maxItems: number, minValue: number, maxValue: number }；events: onDataChange(data[]), onSampleSelect(name)。UI 支持：表格输入、+/- 按钮、快速生成（随机/等分/极端）。",
+      "示意 2 — 平均数可视化组件：EqualizeAnimationCanvas（SVG）展示若干“物件”（小球/苹果图标）。交互：学生拖动或点击“平均化”按钮，触发物品从当前堆移动并平分到指定堆数；同时右侧显示计算条，动画同步显示总和与每堆数值。详见交互逻辑模块中事件触发与动画参数。",
+      "实现参考 2 — Chart 建议：使用 D3（可与 React/Vue 绑定）或 chart.js + 自定义 SVG 动画。DotPlot 每个点绑定 data-index 与 aria-label。BarChart 支持带动画的更新 API：updateData(newHeights[], transitionConfig)。",
+      "示意 3 — 移动端适配：主互动区占屏幕 70% 以上，底部为 Stepper（上一步/下一步/重置）与快速操作（平均化、随机数据、提示）。工具按钮以大圆形浮动按钮呈现。",
+      "实现参考 3 — 视觉与动画参数：位移动画 easing: cubic-bezier(0.22, 1, 0.36, 1)，duration: 600ms；数值滚动使用帧动画（requestAnimationFrame），每步更新值并渲染到 CalculationStrip。"
+    ]
+  },
+  "interaction_logic": {
+    "分级标题": [
+      "基础交互：输入数据与观察分布",
+      "进阶交互：拖拽/平分动画与计算过程显式化",
+      "容错与高级交互：多种操作路径与恢复策略"
+    ],
+    "编号列表": [
+      "1. 用户操作流程总览（步骤化）：(1) 选择/输入数据 → (2) 可视化展示（点图/条形）→ (3) 学生尝试估计平均数（可选择‘试一试’）→ (4) 点击或拖拽触发平均化动画 → (5) 系统显示计算过程与结果 → (6) 学生提交答案/继续调整 → (7) 系统提供反馈并记录。",
+      "2. 事件触发条件：数据变更（onDataChange）立即触发可视化更新并重新计算 Sum/N/Mean（节流 200ms）；拖拽结束（onDragEnd）触发局部动画与重新计算；点击‘平均化’按钮（onAverageClick）触发 equalize 动画流程；点击‘提示’触发渐进提示（first hint -> reveal calculation step）。",
+      "3. 动画交互逻辑：平均化动画分三阶段：① 计算目标每堆数 target = round(sum / groups) 或 精确小数显示；② 每个 item 计算目标坐标与路径；③ 按顺序以 60–80ms 间隔分批移动物件到目标位置，完成后播放数值滚动并高亮结果。动画可中断（点击停止）并回到可编辑状态。",
+      "4. 拖拽与直接操作：点可被拖动至“分堆箱”（drop zones）。当点被放入箱子，实时更新箱子计数并刷新平均估计。拖拽支持键盘替代（焦点后使用左右键移动）。多选拖拽支持框选若干点并一次性移动。",
+      "5. 参数修改交互：用户可修改组数（分堆数）、是否四舍五入平均值、是否显示小数。修改将实时影响动画目标与计算显示，改变会触发一次“预览”短动画而非全部重新播放以节省时间。",
+      "6. 容错策略与撤销：每次数据修改保存到本地 session 历史（最多 20 步），支持撤销/重做。输入验证：非数值或超出范围提示并提供自动修正建议（例如：将空格/逗号分隔值解析为数列）。",
+      "7. 交互示例：用户输入数据 [2,3,4,7] → 点图显示 4 个点 → 用户估计平均数 4 → 点击平均化：系统将 16 平分成 4 堆，每堆 4，动画将点移动到 4 个堆中并在 CalculationStrip 展示“Sum=16, N=4, Mean=16/4=4”。",
+      "8. 失败/异常处理：若数据量过大（>200）提示简化视图；若 animation 错误（JS 异常）回退到静态更新并在控制台/教师面板记录错误。"
+    ],
+    "示意与实现参考": [
+      "示意 1 — 平均化动画伪代码流程：\n1) 计算 sum 与 target = sum / groups;\n2) 对每个 item 计算目标箱 index 与目标位置 (x,y);\n3) for 每个 item: schedule animateTo(x,y) with stagger 60ms;\n4) animateTo 使用 requestAnimationFrame 平滑插值，完成后触发 incrementDisplayedCount 与 updateCalculationStrip;\n5) 全部完成后触发 onAverageComplete 事件（用于评分/记录）。",
+      "实现参考 1 — 关键事件与回调契约：\n- onDataChange(data: number[]): recalculates N,sum,mean; returns {N,sum,mean}\n- onDragEnd(itemId, newZoneId): updates buckets; emits partialCompute\n- onAverageClick(options): {groups:number,rounding:'none'|'round'|'1dp'} returns promise resolves when animation complete\n- onUndo(), onRedo() 可恢复并触发可视化回退动画（可为简单淡出入）。",
+      "示意 2 — 交互示例详述：学生拖 1 个点到箱子 A（onDrop），系统高亮箱子 A 并显示 A 内当前总数；当学生连续拖入后点击‘比较平均’钮，系统将每箱数目平均化并播放转移动画，同时侧边展示“平均数 = (A+B+C)/3”的逐步计算过程，文本同步朗读选项可读出公式。",
+      "实现参考 2 — 性能与节流：大量点（>60）使用 canvas 渲染静态点，交互时仅将被拖动点提升为独立 SVG 层以保证流畅；动画帧率目标 60fps，使用 transform: translate3d 优化。"
+    ]
+  },
+  "teaching_feedback": {
+    "分级标题": [
+      "即时反馈：鼓励与纠错提示",
+      "过程性反馈：步骤记录与计算追踪",
+      "教学监控：班级与个体分析"
+    ],
+    "编号列表": [
+      "1. 学生操作即时反馈：每次数据修改、拖拽或平均化完成后，CalculationStrip 实时显示 N、Sum、Mean，并用颜色暗示正确性（绿色：学生提交的估计与真实平均误差 <= 0.5；黄色：0.5<误差<=1；红色：误差>1）。",
+      "2. 错误提示策略：错误提示分层级（温和引导 → 提示步骤 → 显示完整计算）。首次错误弹出 hint 1（提示如何计算 Sum）；再次错误给出 hint 2（演示将所有对象平分）；反复错误则提供完整解题动画与练习建议。",
+      "3. 即时计算展示：CalculationStrip 分三栏并同步动画：Left: N（计数），Middle: Sum（逐个累加动画），Right: Mean（展示分数形式和小数形式）。学生可点击“逐步展开”查看每一步计算公式与中间值（例如：16/4=4）。",
+      "4. 成绩统计与记录：每次任务完成记录：studentId、timestamp、dataSet、studentEstimate、trueMean、timeSpent、stepsTaken、hintsUsed、result(passed/failed)。教师面板提供班级平均成绩、分布图与个体历史曲线导出（CSV/JSON）。",
+      "5. 个性化学习路径：根据学生历史数据自动调整难度：若连续 3 次估计误差<=0.5，系统提升为增加数据量或引入小数/负数情形；若连续多次使用提示，则降低难度并推荐更多基础练习。",
+      "6. 教师监控功能：实时观察学生当前屏幕截图缩略图、当前数据与进度；可以远程推送数据集、锁定学生视图（用于全班示范）、或一键重置学生练习。教师可设置评分规则（例如：是否允许使用提示打分扣除）。",
+      "7. 实验步骤与难度分级建议：基础（Step A）：手动输入 3–6 个小整数并计算平均；中级（Step B）：给定不均匀分布通过平分动画理解平均；提升（Step C）：含小数或不同组数的平均数计算，并引入估算与四舍五入策略。每步提供完成条件与典型解答示例。",
+      "8. 隐私与数据保留策略：学习记录在本地与服务器双备份，保留期 configurable（默认学期末清理），导出仅限教师权限。"
+    ],
+    "示意与实现参考": [
+      "示意 1 — 反馈流程示例：学生提交估计 -> 系统比较真值 -> 若正确（误差<=阈值）显示绿色勋章并记录‘通过’；否则显示第一级提示并允许重试；每次提示使用耗用计数记录在学生档案里。",
+      "实现参考 1 — 记录数据结构（JSON）示例：\n{\n  \"studentId\": \"S123\",\n  \"taskId\": \"avg_01\",\n  \"data\": [2,3,4,7],\n  \"submittedEstimate\": 4.5,\n  \"trueMean\": 4,\n  \"timeSpentSec\": 75,\n  \"hintsUsed\": 1,\n  \"result\": \"partial\"\n}\n教师面板可以基于此聚合出平均成功率、常见错误类型（如未求和、忘记除以 N）。",
+      "示意 2 — 难度阶梯详细步骤：\n- Step A（入门）：示例 1 提问：‘5 个苹果平均分给 5 个小朋友每人几份？’ → 动画将苹果平分；学习目标：理解平均即“每人相同的份”。\n- Step B（应用）：给 7、2、5、4 的数据集，询问估计平均并让学生通过拖拽到 4 个箱子尝试平分，系统后给出真实平均并比较。 \n- Step C（拓展）：引入小数数据和不同分堆（如分 3 堆、4 堆），要求学生选择最接近的平均并解释原因。",
+      "实现参考 2 — 成绩与推荐算法：简单阈值算法：\n- 精熟（A）：最近 5 次任务准确率 >= 0.8 且平均耗时 <= 设定阈值\n- 进步（B）：准确率在 0.5–0.8，提示使用频率下降\n- 需巩固（C）：准确率 < 0.5 或提示频繁使用\n基于分类结果自动推送相应练习包并在教师面板给出推荐复习材料链接。"
+    ]
+  }
+}

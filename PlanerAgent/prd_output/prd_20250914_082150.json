@@ -1,0 +1,161 @@
+{
+  "ui_design": {
+    "分级标题": [
+      "一级：总体页面与响应式布局",
+      "二级：关键交互组件与可视化元素",
+      "三级：视觉风格、动效与无障碍要求"
+    ],
+    "编号列表": [
+      {
+        "id": 1,
+        "title": "总体页面布局（适配桌面 / 平板 / 手机）",
+        "content": "主页面采用三栏自适应布局：左侧工具栏（可收起）、中间交互画布（核心教学区）、右侧信息/反馈面板。移动端合并为上下结构：画布在上，工具与反馈以标签切换。布局支持流式与断点：>=1200px 三栏，768-1199px 两栏（工具收起或浮层），<768px 单栏纵向。"
+      },
+      {
+        "id": 2,
+        "title": "关键组件清单（React/Vue 组件化建议）",
+        "content": "建议将界面拆成可复用组件：\n- HeaderBar（props: title, lessonId, userInfo, actions）\n- ToolPanel（props: items[], collapsible）——内含质量块库（grams、100g、500g、1kg、5kg 图标）\n- CanvasStage（props: sceneState, scale, onDrop, onMeasure）——SVG/Canvas 渲染天平、物体、尺子\n- BalanceScale（props: leftMass, rightMass, animationState）\n- MassBlock（props: id, massGrams, iconSize, draggable）\n- ConverterPanel（props: currentTotalGrams, showSteps）\n- ControlBar（props: startBtn, resetBtn, hintBtn, difficulty）\n- FeedbackPanel（props: studentState, teacherNotes）\n- TeacherDashboardWidget（props: sessionData）\n每个组件应暴露事件：onDragStart, onDragEnd, onDrop(targetId, item), onConvert(requestedUnit)。"
+      },
+      {
+        "id": 3,
+        "title": "画布与可视化元素设计",
+        "content": "画布使用 SVG（矢量保证放缩清晰）渲染天平、砝码与计量尺。砝码采用可叠加的块状视觉（彩色矩形/圆角矩形），不同质量用颜色与标签区分（例如：1g 浅黄、10g 浅绿、100g 天蓝、1kg 橙）。天平要有指针角度动画与左右盘平衡位移。转换过程（例如 1000g->1kg）用“块合并”动画：多个 100g 小块合并成 1kg 大块，合并处有数字递增动画和公式浮现。"
+      },
+      {
+        "id": 4,
+        "title": "交互控件与输入方式",
+        "content": "支持拖拽、点击添加、数值输入三种方式：\n- 拖拽：从工具栏拖到天平盘或称盘上。\n- 点击：单击质量块在当前目标处添加一块（适配触屏）。\n- 数值输入：可直接输入质量（g 或 kg），点击“生成”在画布生成对应的分解块（系统分解策略：优先大到小，例如 1kg -> 1x1kg 或 1000g -> 1x1000g/10x100g 等）。\n组件应支持 keyboard 操作（聚焦时方向键移动，Enter 放置，Esc 取消）。"
+      },
+      {
+        "id": 5,
+        "title": "视觉风格与动效细节",
+        "content": "采用儿童友好、对比清晰的扁平风格：主色调可选蓝/橙，辅助色用于区分单位。动效原则：短、清晰、有因果（时长 200-700ms）：\n- 拖拽拖拽阻尼与回弹（0.2s）\n- 物块合并时放大 -> 合并 -> 缩回（0.5s）并显示公式\n- 平衡动画：指针缓动（ease-out 400ms）并伴随轻微震动（微动画）表示超重\n- 成功反馈：简单弹出动画 + confetti（仅短暂）\n注意避免过度动画干扰学习。"
+      },
+      {
+        "id": 6,
+        "title": "响应式与触屏适配（实现建议）",
+        "content": "触屏优先：拖拽支持 touch events；移动端将工具栏以底部抽屉呈现。断点与栅格建议：使用 CSS Grid，变量化尺寸（--canvas-padding、--side-width）。建议提供“简洁模式”以减少动画和视觉元素帮助低配置设备。"
+      },
+      {
+        "id": 7,
+        "title": "无障碍与本地化提示",
+        "content": "为关键按钮与可拖元素提供ARIA标签和描述。键盘用户应能通过聚焦与快捷键进行全部核心操作。所有文本支持国际化（i18n），默认中文。对视觉障碍提供高对比模式与语音提示（可切换）。"
+      }
+    ],
+    "示意与实现参考": [
+      {
+        "示意": "组件交互草图",
+        "参考实现": "用 SVG 绘制天平：左盘（<g id='leftPan'>）、右盘（<g id='rightPan'>），指针为 <line>。每个质量块为 <rect> 或 <image>，拖拽时改变 transform。推荐使用 React + SVG 或 Vue + SVG 组合。"
+      },
+      {
+        "示意": "质量块合并动画",
+        "参考实现": "使用 requestAnimationFrame 或动画库（Framer Motion / GSAP）：当合并条件触发（累计 >=1000g）时，触发合并序列：1) 小块向合并中心移动(300ms) 2) 中心放大并渐变为大块 (200ms) 3) 弹性回落 (100ms)。同时在旁边显示转换公式（例如：1000 g → 1 kg），公式用淡入文本动画（200ms）。"
+      },
+      {
+        "示意": "组件 API 示例（React prop）",
+        "参考实现": "{ name: 'MassBlock', props: { id: string, grams: number, color?: string, draggable?: boolean, onPick?: (id)=>void, onDrop?: (targetId, item)=>void } }"
+      }
+    ]
+  },
+  "interaction_logic": {
+    "分级标题": [
+      "一级：核心用户流程（从进入到完成实验）",
+      "二级：事件触发与动画时序",
+      "三级：容错、撤销与同步策略"
+    ],
+    "编号列表": [
+      {
+        "id": 1,
+        "title": "用户典型操作流程（示例流程）",
+        "content": "步骤 A（开始）: 学生选择难度（易/中/难），系统加载预置物品与目标任务（例如：将桌上物品总质量显示成“1.2 kg”，或让左盘与右盘平衡）。\n步骤 B（拖放）: 学生从工具库拖拽质量块到天平左/右盘，或点击生成特定质量块。\n步骤 C（实时计算）: 每次放置/移除触发实时计算，ConverterPanel 显示当前总质量并按 g/kg/ton 动态更新。\n步骤 D（转换与合并）: 当某侧累计质量 >=1000g 时，触发合并动画并自动转换为 kg 单位（显示转换过程公式）。\n步骤 E（检查/提交）: 学生点击“检查答案”，系统按规则给出反馈并记录分数。"
+      },
+      {
+        "id": 2,
+        "title": "关键事件与触发条件（详列）",
+        "content": "事件清单：\n- onDragStart(itemId): 高亮目标盘，记录原位置。\n- onDragOver(targetId): 若目标可接收，显示绿色投放提示槽；否则显示红色不允许图标。\n- onDrop(targetId, item): 计算新质量 -> 更新 state -> 触发动画 sequence（见下）。\n- onClickAdd(itemType, target): 直接在 target 位置生成并触发放置逻辑。\n- onInputNumber(value, unit): 系统分解 value 为若干块并把它们以动画顺序放入鼠标目标或默认盘。\n- onConvertRequest(unit): 手动请求显示转换步骤（例如从 g 到 kg 的分解过程）。"
+      },
+      {
+        "id": 3,
+        "title": "动画与交互时序（示例）",
+        "content": "示例：学生把 10 个 100g 放到左盘，达到 1000g，系统应：\n1) 每次单块放下后更新左盘质量数值（即时，动画 150ms）。\n2) 当检测到左盘累计质量 >=1000g，暂停接收新的“分解”操作，开始合并动画序列：小块向合并中心移动（300ms），合并为 1 个 1kg 大块并替换原有小块（200ms），同时在侧边显示公式：\"10×100 g = 1000 g = 1 kg\"（淡入 250ms）。\n3) 合并完成后恢复接收操作。"
+      },
+      {
+        "id": 4,
+        "title": "交互细节与容错策略",
+        "content": "容错与用户引导：\n- 非法放置（例如把小块放在非目标区域）：弹出托盘提示“请将砝码放到天平盘上”，语音提示可选。\n- 放置超时（学生长时间停留在拖拽状态）：在 6 秒显示提示气泡“把砝码放到左/右盘试试”。\n- 撤销/重做：每次放置/移除都写入操作栈，支持最多 20 步撤销。\n- 并发同步（教师监控模式）：学生端每次关键操作（放置、合并、提交）发事件到服务器（事件节流 200ms），确保教师界面实时更新。"
+      },
+      {
+        "id": 5,
+        "title": "复杂交互示例：测量与比较任务",
+        "content": "任务示例：比较一个苹果与一个梨哪个更重。流程：\n- 教师任务：把苹果放到左盘，学生需要用工具库选择合适的砝码在右盘使天平平衡。\n- 交互逻辑：当 student onDrop 触发，系统计算差值并高亮提示需要的最接近砝码组合（作为 hint）。若学生尝试错误组合，系统显示“稍微重了一点/轻了一点”，并在右侧展示当前差值与建议调整。"
+      }
+    ],
+    "示意与实现参考": [
+      {
+        "示意": "事件处理伪代码：onDrop 合并逻辑",
+        "参考实现": "function onDrop(targetId, item) { const targetMass = state[targetId].mass; const newMass = targetMass + item.grams; state[targetId].mass = newMass; animatePlace(item, targetId).then(()=>{ if (newMass>=1000 && unitMode==='g'){ const {quotient, remainder} = divmod(newMass,1000); // 合并成 kg 的策略 createKgBlocks(quotient); createGramBlocks(remainder); animateMergeSequence(); } updateConverterDisplay(newMass); }); }"
+      },
+      {
+        "示意": "合并优先级与分解算法",
+        "参考实现": "给定 grams 数值，分解策略（大->小）：使用单位序列 [1000g(1kg), 500g?, 100g, 10g, 1g]（可自定义）。贪心算法：for unit in units: count = Math.floor(grams/unit); grams -= count*unit; push blocks(count,unit);"
+      },
+      {
+        "示意": "网络交互事件格式（教师监控）",
+        "参考实现": "每次关键操作发事件：{ type: 'place', userId:'u123', timestamp: 163..., payload: { target:'leftPan', item:{id:'b345', grams:100}, resultMassLeft: 450, resultMassRight: 300 } }。教师端订阅 WebSocket 更新并渲染 student 操作日志与当前天平状态。"
+      }
+    ]
+  },
+  "teaching_feedback": {
+    "分级标题": [
+      "一级：即时学生反馈与可视化提示",
+      "二级：分层难度与评分机制",
+      "三级：教师监控、数据记录与个性化学习路径"
+    ],
+    "编号列表": [
+      {
+        "id": 1,
+        "title": "即时反馈类型与展示形式",
+        "content": "即时反馈包括：\n- 数值提示：每次放置或移除时在 ConverterPanel 显示“当前质量：XXX g（= Y.Y kg）”并突出变化部分。\n- 动作反馈：合并成功播放正向动画并显示文字“已合并为 1 kg”，错误放置显示浅红色抖动并提示‘不能放在此处’。\n- 阶段性提示：当学生多次尝试错误（例如连续 3 次错误组合）系统弹出提示气泡并提供分步骤提示或示范动画。"
+      },
+      {
+        "id": 2,
+        "title": "错误提示与纠错策略（具体文本与示例）",
+        "content": "错误类型与建议文本：\n- 单位混淆（把 100g 误当作 1kg）：提示“注意：1000 g = 1 kg。试一试把 10 个 100 g 合并成 1 kg。”并高亮合并动画示范。\n- 超过目标质量：提示“现在超重了 X g，试着移除或换成更小的砝码。”并给出可移除候选提示。\n- 操作错误（非法投放）：提示“把砝码拖到天平的盘子上，或点击砝码直接添加。”"
+      },
+      {
+        "id": 3,
+        "title": "评分规则与即时评估策略",
+        "content": "评分维度：正确性（60%）、操作效率（20%）、使用提示次数（- 每次 hint 扣除少量分数，-合理提示鼓励探索）、完成时间（20%）。\n示例评分公式：score = baseCorrect*0.6 + max(0, 20 - timePenalty)*0.2 + max(0,20 - hintCount*5)*0.2。提交时显示评分细则与错误点。"
+      },
+      {
+        "id": 4,
+        "title": "分级实验设计与任务样例（易/中/难）",
+        "content": "易（理解单位）: 给出单一物体，让学生用砝码达到目标质量（例如：把 250 g 放在盘子里），提供明确提示与推荐组合。\n中（单位转换）: 要求学生将若干 g 合并成 kg 并展示转换步骤（例如：把 1200 g 显示为 1 kg 200 g）。\n难（实际应用/估算）: 让学生用真实场景（背包、书本、箱子）估计并通过砝码验证总质量；或比较车辆、卡车的吨位示意并让学生把 kg 换成吨表示。每个等级给出步骤任务与可选拓展题。"
+      },
+      {
+        "id": 5,
+        "title": "教师监控与课堂管理功能",
+        "content": "教师界面应提供实时仪表盘：\n- 学生实时面板：显示每名学生当前任务、天平状态、是否请求帮助、当前得分。\n- 异常警报：例如大量学生卡在同一题提醒教师介入。\n- 批量评分与批注：教师可为学生提交的结果打分并写反馈。\n- 导出功能：按班级导出 CSV（字段见记录方案）。"
+      },
+      {
+        "id": 6,
+        "title": "学习记录与个性化推荐规则",
+        "content": "记录字段建议：{ userId, lessonId, taskId, timestamp, actions: [...], finalMassLeft, finalMassRight, score, hintsUsed, timeSpent, mistakes: [{type, count}] }。\n个性化规则示例：\n- 若学生 3 次以上单位混淆，则下一堂课优先推“单位转换练习”并降低新题难度。\n- 若学生在最优解上多次超时但不求助，则自动提供分步引导模式。\n- 基于学生历史表现生成周报，推荐练习包。"
+      }
+    ],
+    "示意与实现参考": [
+      {
+        "示意": "即时反馈 UI 示意",
+        "参考实现": "在 FeedbackPanel 中呈现三个区域：实时数值（Converter）、错误/提示气泡（HintBox）、成就/分数（ScoreBadge）。当达到学习目标时弹出短暂模态显示得分与纠错建议。"
+      },
+      {
+        "示意": "教师数据表结构（示例 SQL）",
+        "参考实现": "CREATE TABLE student_logs ( id SERIAL PRIMARY KEY, user_id VARCHAR, lesson_id VARCHAR, task_id VARCHAR, timestamp TIMESTAMP, actions JSONB, final_left_mass INT, final_right_mass INT, score INT, hints_used INT, time_spent INT );"
+      },
+      {
+        "示意": "反馈与个性化逻辑伪代码",
+        "参考实现": "function evaluateAttempt(log){ const mistakes = analyzeActions(log.actions); if(mistakes.unitConfusion >=3){ schedulePractice(log.userId, 'unit_conversion', priority=high); } if(log.hintsUsed>2){ markAsNeedsGuidance(log.userId); } return {score: computeScore(log), suggestions: generateSuggestions(mistakes)} }"
+      }
+    ]
+  }
+}

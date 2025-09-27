@@ -1,0 +1,66 @@
+{
+  "js_plan": {
+    "总体技术栈": "原生 JS + SVG。动画使用 requestAnimationFrame + 可选 GSAP (作为增强)。支持触摸与鼠标事件。数值与提示通过 DOM 更新。",
+    "核心数据模型": {
+      "state": {
+        "radius": 50,
+        "sectors": 12,
+        "isPlaying": false,
+        "currentStep": 0,
+        "animationProgress": 0.0
+      }
+    },
+    "主要函数与职责": {
+      "init()": "初始化 SVG 元素、绑定事件、绘制初始圆与标签，读取默认 state",
+      "drawCircle(r)": "以 state.radius 绘制 circleMain、radiusLine、radiusHandle，并计算周长/面积用于展示",
+      "drawSectors(r, n)": "按 n 将圆分割为扇形路径元素，插入 sectorsGroup",
+      "updateValues()": "计算并更新 DOM 中的 radiusValue, circValue, areaValue（使用 Math.PI）并格式化显示",
+      "bindEvents()": "绑定拖拽（mousedown/touchstart/mousemove/touchmove/mouseup）到 radiusHandle，绑定控件按钮与滑块事件",
+      "onDragRadius(evt)": "计算拖动位置映射到画布坐标 -> 更新 radius -> drawCircle() 与 updateValues()；拖动时暂停自动播放",
+      "animateUnwrap(): Promise": "驱动扇形/圆周展开为一条直线的动画，使用 requestAnimationFrame 控制每帧变换，返回 Promise 以便步骤控制",
+      "animateRearrangeSectors(): Promise": "把扇形元素交替移动重排成近似矩形/平行四边形，动画中展示底长接近 πr，高接近 r",
+      "playStepSequence()": "根据 currentStep 启动对应 animateUnwrap 或 animateRearrangeSectors，控制 isPlaying 与 UI",
+      "gotoStep(stepIndex)": "切换步骤并展示对应提示，高亮相关 SVG 元素；如果自动播放，顺序启动动画",
+      "computeCircumference(r)": "返回 2 * Math.PI * r",
+      "computeArea(r)": "返回 Math.PI * r * r",
+      "formatNumber(num)": "对显示数值做适当舍入（例如保留 2 位小数，学生可切换精度）",
+      "showHint(text, level)": "在 #hints 区显示提示，level 决定颜色/图标（提示/问题/答案）"
+    },
+    "事件绑定列表": [
+      "radiusHandle mousedown/touchstart -> onDragStart",
+      "document mousemove/touchmove -> onDragRadius (if dragging)",
+      "document mouseup/touchend -> onDragEnd",
+      "radiusSlider input -> update state.radius + drawCircle/updateValues",
+      "radiusInput change -> set state.radius validated -> drawCircle/updateValues",
+      "sectorsRange input -> set state.sectors -> drawSectors/updateValues",
+      "nextStep click -> gotoStep(state.currentStep+1)",
+      "prevStep click -> gotoStep(state.currentStep-1)",
+      "playPause click -> toggle playStepSequence",
+      "reset click -> reset state to defaults and redraw",
+      "showFormula change -> toggle formula overlay"
+    ],
+    "动画逻辑细节": {
+      "requestAnimationFrame 管理器": "所有帧动画通过一个单一的 rAF 循环管理，避免冲突；动画函数返回 Promise，在完成时 resolve",
+      "unwrap 动画实现思路": "将圆周参数化为等长小段（或使用扇形边缘路径），逐渐把这些小段沿 x 轴排列，平滑过渡将弧长映射到线段长度。动画过程中实时计算并显示线段长度与 2πr 的差距。",
+      "sectors 重排实现思路": "创建扇形路径并交替翻转、平移到两排；控制目标位置为简单矩形网格单元，实时显示拼接后底边长度 ≈ πr 与高度 ≈ r，逐步增加扇形 count 提示收敛性。",
+      "高亮与提示": "在动画关键帧触发高亮（添加 class 'highlight'），并调用 showHint() 给出引导语句"
+    },
+    "交互反馈与评估": {
+      "即时反馈": "当用户拖动半径或改变扇形数时，显示“观测建议”并更新显示数值；当结果与公式吻合时显示奖励提示（例如：‘很好！周长接近 2πr’）",
+      "思考题触发": "在某些步骤结束时弹出非阻塞问题（例如：如果半径变为两倍，周长会怎样？面积会怎样？）并提供一键演示验证",
+      "容错与边界": "半径设定有最小/最大限制，拖拽超出边界会被约束，输入非法值给出语义错误提示"
+    },
+    "开发与扩展建议": [
+      "将动画步骤封装为状态机（StepController），便于录制/回放教学演示",
+      "可选集成 GSAP 提供更平滑的补间动画（尤其是扇形重排）作为增强",
+      "添加单位切换（px/cm）并可输入实际度量值以连接现实测量"
+    ]
+  },
+  "teaching_content": {
+    "一级主题": "图形与几何",
+    "二级主题": "图形 的认识与测量",
+    "年级": "5～6年级",
+    "课标要求": "探索圆的周长和面积计算公式。",
+    "基本实验活动": "探索圆的周长和面积计算公式"
+  }
+}

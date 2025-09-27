@@ -1,0 +1,82 @@
+{
+  "ui_design": {
+    "分级标题": [
+      "1. 总体布局（Layout）",
+      "2. 组件清单（Components）",
+      "3. 图形显示与视觉规范（Graphics & Visuals）",
+      "4. 动画与视觉效果（Animation & Effects）",
+      "5. 响应式与无障碍（Responsive & A11y）"
+    ],
+    "编号列表": [
+      "1) 页面总体：顶部标题栏 + 中央主交互区（SVG/Canvas）+ 左侧工具栏 + 右侧步骤/提示/教师面板 + 底部控制条（重置、检查、演示、难度切换）",
+      "2) 左侧工具栏组件：新建三角形、添加顶点、坐标输入、放大/缩小、网格开关、吸附开关、垂直线工具",
+      "3) 中央主交互区组件：GeometryCanvas（SVG）承载可拖拽顶点、边、辅助线、面积填充和动画克隆；支持坐标系显示（网格/刻度）",
+      "4) 右侧信息板组件：步骤导航（分步实验）、即时计算面板（显示 base/height/area 的数值和公式）、提示/错误提示区域、教师监控切换（展示学生进度）",
+      "5) 底部控制条：播放/暂停动画、演示速度滑块、检查答案按钮、显示/隐藏证明动画、难度切换（初级/中级/高级）",
+      "6) 视觉规范：采用高对比度的配色（安全色盲调色方案），顶点为圆形抓手（直径 10-14px），选中边为 3-4px 实线，未选中边为 2px。",
+      "7) 图形填充：三角形面积使用半透明填充（alpha 0.35），在证明动画时切换为条纹/斜线填充方便比较；面积数值以浮动标签靠近图形显示。",
+      "8) 动画风格：统一使用 200-600ms 的缓动（cubic-bezier(0.22, 1, 0.36, 1)）用于顶点拖动与克隆移动，演示步骤动画可选 0.5-1.5s，支持跳过。",
+      "9) 响应式：宽屏时左工具栏与右信息板并列显示；窄屏（<=768px）左工具栏折叠为底部浮动工具，右信息板以抽屉形式弹出；触屏支持触控拖拽与双指缩放。",
+      "10) 组件开发友好：为 React/Vue 提供清晰 props/state 设计（见示意参考），组件应保持纯渲染+最小副作用，动画通过 CSS + requestAnimationFrame 控制以保证性能。"
+    ],
+    "示意与实现参考": [
+      "示意图：顶部 TitleBar，左侧 ToolPanel（按钮列），中间 GeometryCanvas（SVG 网格），右侧 StepPanel，底部 ControlBar。",
+      "GeometryCanvas 建议实现：SVG viewBox 坐标系，单一 <svg> 元素内包含：<g class='grid'>、<g class='triangle'>（<polygon> + <circle> 顶点） 、<g class='helpers'>（高、垂线、复制的平行四边形）和 <g class='labels'>。拖拽事件绑定到顶点 circle，使用 pointerdown/pointermove/pointerup 支持鼠标与触摸。",
+      "组件接口（React 风格示例）：\n- <GeometryCanvas\n  width, height,\n  points: [{id, x, y}],\n  selectedPointId,\n  onPointDragStart(id), onPointDrag(id, x,y), onPointDragEnd(id, x,y),\n  showGrid:boolean, snapToGrid:number|null,\n/>\n可通过 props 传入动画开关和样式主题。",
+      "样式建议：\n- 主色：#1E88E5（边/点），辅助色：#FFC107（标注），错误色：#E53935。\n- 面填充：rgba(30,136,229,0.18)。\n- 字体：无衬线（如 Noto Sans/Roboto），标签 12-14px。",
+      "性能提示：SVG 元素数量尽量受控，动画移动使用 transform（translate）而非直接修改属性以利用 GPU。复杂演示可预先计算路径并 animateTransform。"
+    ]
+  },
+  "interaction_logic": {
+    "分级标题": [
+      "1. 用户任务流（User Flows）",
+      "2. 事件与触发条件（Events & Triggers）",
+      "3. 动画与交互细则（Animation & Interaction Rules）",
+      "4. 容错策略与边界情况（Fault Tolerance）",
+      "5. 交互示例（Concrete Examples & Pseudocode）"
+    ],
+    "编号列表": [
+      "1) 初始流程：学生打开页面 -> 选择难度（初/中/高）-> 阅读步骤面板 -> 在画布上用鼠标/触控拖动三个顶点形成三角形或输入坐标 -> 系统自动识别三角形并激活高度工具。",
+      "2) 构造高度：点击 'Drop Perpendicular' 按钮或拖动顶点时可长按触发垂线显示。系统在基底上投影并显示高度线段（标注 h）。",
+      "3) 计算触发：当 base 或 height 改变（通过拖动顶点或修改数值输入）时，立即触发即时计算并更新显示的公式（A = 1/2 * b * h）。",
+      "4) 证明动画触发：点击 '证明公式' 或自动证明模式（教师可开启）将启动：复制三角形并沿基底方向平移，生成一个平行四边形；播放拼接动画并高亮显示矩形/平行四边形的底与高，展示公式推导动画。",
+      "5) 交互规则：拖拽顶点时：开始触发 dragstart -> 实时触发 drag（更新位置、重绘高度/面积）-> 结束触发 dragend（记录一次操作快照），拖动过程中禁用页面滚动以保证交互流畅。",
+      "6) 拖动吸附与网格：当吸附开启时，拖动到网格线邻近（阈值 6px）自动吸附并给出微交互反馈（震动式边框闪烁）。",
+      "7) 容错与提示：检测到三个顶点共线时，弹出提示并高亮说明（提示文字：'三点共线，无法构成三角形，请调整顶点'），并禁用高度工具与计算直到修正。",
+      "8) 撤销/重做：操作记录栈（最多 50 步），支持撤销/重做快捷键与按钮。",
+      "9) 教学模式差异：练习模式允许多次尝试并提供提示；测试模式记录但不提供提示；演示模式自动播放教学动画并锁定编辑。",
+      "10) 边界事件：顶点被拖出画布时自动 clamp 到可视边界并弹出微提示，数值输入超出预设范围（如基底/高度 > 1000）要求确认以避免误操作。"
+    ],
+    "示意与实现参考": [
+      "示例交互：学生拖动顶点 B（顶点 id='B'）时，系统同时执行：\n- 计算实时 base (distance between A and C)\n- 计算高度 h (距离从 B 到线 AC 的垂直距离)，并更新显示标签\n- 如果启用了证明动画预览：在旁边生成一个克隆三角形并沿 AC 平移一半距离，淡入平行四边形填充\n- 更新即时公式：A = 1/2 × b × h，替换数值并播放一次短动画强调数值变化\n\n伪代码（事件逻辑）：\n- onPointDrag(id, x,y):\n  updatePoint(id, x,y)\n  if (isCollinear(points)) { showError('三点共线'); disableHeightTool(); }\n  else {\n    height = calcHeight(points)\n    base = calcBase(points)\n    area = 0.5 * base * height\n    renderLabels({base, height, area})\n    if (proofPreviewEnabled) updateProofClone(points)\n  }\n  recordTempState()\n\n- onProofStart():\n  clone = cloneTriangle(points)\n  animateCloneTranslate(clone, vectorAlongBase)\n  morphToParallelogram(clone)\n  highlight(baseSegment, heightSegment)\n  animateFormulaSubstitution(base, height, area)\n",
+      "实现细节：\n- 高度计算：使用点到直线距离公式；对于 SVG 使用屏幕坐标先转到画布坐标后计算。\n- 拖拽实现：使用 pointer events（pointerdown/move/up），在 move 中使用 requestAnimationFrame 节流更新，避免频繁重绘。\n- 证明动画实现：生成三角形的 DOM 克隆（<use> 或复制 <polygon>），使用 transform: translateX/translateY 与 rotate 进行平移/旋转；为更顺滑的形变可使用 SVG path 插值或 CSS clip-path 动画。",
+      "错误与回退：\n- 如果动画执行失败或帧率下降，降级为简单淡入淡出切换并记录性能日志（供教师/开发查看）。\n- 所有用户交互均有最终确认/检查按钮，未经确认的数据不会提交至教师监控模块。"
+    ]
+  },
+  "teaching_feedback": {
+    "分级标题": [
+      "1. 即时反馈（Immediate Feedback）",
+      "2. 诊断性提示与自适应提示（Diagnostic & Adaptive Hints）",
+      "3. 教师监控与数据上报（Teacher Dashboard & Telemetry）",
+      "4. 成绩统计与个性化记录（Scoring & Learning Records）",
+      "5. 实验步骤与难度分级（Experiment Steps & Levels）"
+    ],
+    "编号列表": [
+      "1) 即时数值反馈：每次顶点移动或数值输入后，立即在右侧即时计算面板显示 base、height 和 area 的当前数值（带单位），并在公式中突出显示变化的项（例如当 height 改变时高亮 h）。",
+      "2) 正误提示：当学生点击“检查”后，系统根据允许误差（默认相对误差 1%）判断答案，正确显示绿色勾；错误时显示红色叉并给出分步诊断（例如：'高度取错：应为从顶点到底边的垂线长度'）。",
+      "3) 分层提示策略：\n- 提示 1（轻提示）：高亮应操作区域（如“请拖动顶点 B 至底边的上方以测量高度”）；\n- 提示 2（中提示）：显示测量步骤的简短文字与图示；\n- 提示 3（详提示）：给出完整解法与公式代入过程并提供“再试一次”按钮。\n提示使用次数计数并记录在学生作业数据中以便教师评估独立完成度。",
+      "4) 教师监控：每次学生交互（拖动事件、检查、请求提示、提交）上报到后台事件流，包含时间戳、操作类型、当前坐标快照、是否使用提示、最终结果。教师面板显示班级完成率、平均尝试次数、提示使用率与常见错误分布图。",
+      "5) 分数与奖励：对每个实验任务定义构成分数（构造正确 40%，测量正确 30%，用公式计算正确 30%），使用提示会降低得分（轻提示 -2 分，中提示 -5 分，详提示 -10 分）。提供徽章/星级激励并在学生记录中保留历史最高分。",
+      "6) 个性化记录：记录每次尝试的完整快照（顶点坐标、步骤状态、时间消耗、提示使用），允许教师回放学生操作轨迹（回放速度可调），用于诊断学习困难点。",
+      "7) 难度分级与实验步骤：见下方具体步骤数组（含目标、任务与预期反馈）。",
+      "8) 数据隐私与导出：支持 CSV/JSON 导出学生成绩与操作日志，导出项包括 student_id、activity_id、attempts、hints_used、final_score、timestamps。"
+    ],
+    "示意与实现参考": [
+      "即时计算与展示：右侧面板展示如下元素：\n- base: 45 px (或 12 cm)\n- height: 20 px (或 5 cm)\n- area: 1/2 × 45 × 20 = 450 (单位²)\n同时在公式处播放一段简短动画，把数值逐项替换并高亮计算过程。",
+      "错误提示文本示例：\n- 当三点共线：'检测到三点共线：无法构成三角形，请调整任一顶点。'\n- 当高度取错：'高度应为顶点到底边的垂直距离，当前测量值与预期相差较大。点击“提示”查看如何正确作垂线。'\n- 当数值超限：'输入的数值超出正常范围，请检查是否输入单位或小数点错误。'\n",
+      "教师面板数据模型参考（JSON Schema 精简示例）：\n- StudentAttempt {\n  studentId: string,\n  activityId: string,\n  attemptId: string,\n  steps: [{timestamp, actionType, payload}],\n  finalScore: number,\n  hintsUsed: {light: number, mid: number, deep: number},\n  durationSec: number\n}\n教师仪表盘接口应支持按班级/学生/时间范围过滤及回放单次 attempt 的步骤序列。",
+      "实验步骤与难度分级（具体任务示例）：\n- 初级（目标：理解基本概念）\n  步骤 1: 在画布上拖动三个点构成任意非退化三角形（系统提示是否成功）。\n  步骤 2: 点击 '测量高度' 自动生成垂线并显示 h 与 b，同时给出即时 area（学生可选择隐藏答案尝试手算）。\n  反馈策略：实时数值显示；若学生请求提示，则给出高亮引导。\n\n- 中级（目标：掌握推导方法）\n  步骤 1: 构造三角形并用拖拽手段生成与基底相同长度的三角形复制（手工操作或系统引导）。\n  步骤 2: 触发证明动画 '将两个全等三角形组成平行四边形'，并让学生手动拖动复制以完成拼接。\n  反馈策略：对拼接操作提供容错引导，检查拼接后是否形成平行四边形并给出评分。\n\n- 高级（目标：迁移与应用）\n  步骤 1: 给定基底长度和面积，要求学生算出高度并在画布上标示正确位置。\n  步骤 2: 引入不同单位转换（cm/m），要求学生考虑单位并填写最终面积单位。\n  反馈策略：检查单位换算与计算步骤，记录并提示常见错误（如单位未换算）。",
+      "个性化学习记录示例（用于回放）说明：\n- 每条记录包含：{time, action: 'drag'|'setCoordinate'|'clickCheck'|'requestHint', targetId, coords:{x,y}, computed:{b,h,area}, hintLevelIfAny}\n教师可以加载一名学生的记录并逐步回放，UI 在回放模式下禁用编辑并以高亮展示当时界面状态。"
+    ]
+  }
+}

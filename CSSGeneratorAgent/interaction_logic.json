@@ -1,0 +1,24 @@
+{
+  "分级标题": [
+    "一级：用户操作流程总览（任务流与状态机）",
+    "二级：交互事件与动画触发条件（事件列表与优先级）",
+    "三级：容错策略与边界条件处理（验证、提示、回退）"
+  ],
+  "编号列表": [
+    "1. 基本状态机（State Machine）：初始(Idle) -> 编辑(Dragging/Editing) -> 动画中(Animating) -> 提交(Submitted) -> 评估(Review)。所有操作需记录时间戳与状态转换日志。",
+    "2. 关键事件定义：onVertexDragStart(vertexId), onVertexDrag({x,y}), onVertexDragEnd(vertexId), onBaseLockToggle, onAlignToGrid, onAnimateTransform(type), onReset, onUndo, onSubmitAnswer。",
+    "3. 拖拽交互逻辑：- 触发：pointerdown 在顶点 hit area -> pointermove 更新顶点坐标 -> pointerup 结束。- 实时计算：每 16ms（帧率约60fps）或使用 requestAnimationFrame 更新形状与相关标签。- 限制：最小距离阈值（避免零高）和避免顶点三点共线（判断行列式或向量叉积），若非法则在 onVertexDragEnd 回退到最近合法位置或自动微调到合法位置并提示。",
+    "4. 高线与基线处理：- 当用户选择某条边为 base（自动或手动锁定），系统将计算并绘制底边与从对顶点到底边的垂线；- 计算公式：height = |cross(b-a, p-a)| / |b-a|。- 高线动态显示并含拖拽吸附行为（吸附到最近水平/垂直/网格线）。",
+    "5. 拼接/动画流程（演示三角形到平行四边形）：- 动作触发：点击 '拼接演示'。- 动画步骤：复制三角形副本 -> 沿底边按镜像翻转 -> 平移以拼成平行四边形 -> 渐变填充显示面积对比 -> 在右侧逐步文字动画展示公式推导。- 动画控制：提供速率滑动器，支持暂停/后退一步/跳过。- 交互冲突解决：动画期间禁用拖拽，点击跳过立即完成状态并触发 onAnimationEnd。",
+    "6. 参数修改触发逻辑：- 数值输入修改（base/height）：输入校验（正数、单位范围），更新顶点位置以保持几何一致；- 如果用户手工移动顶点与数值输入冲突，优先以最近操作为准，并在 InspectorPanel 提示 '顶点位置与数值不一致，是否对齐？'。",
+    "7. 交互示例详述：- 示例 A（简单）：学生用移动工具拖动顶点，实时看到 base=6 cm, height=3 cm, area=9 cm²；当松开顶点，如果 height < 阈值（0.5 cm）提示 '高度过小，无法形成有效三角形'。- 示例 B（进阶）：学生选择 '拼接'，动画将两个相同三角形拼成平行四边形，动画同时在公式面板中变换 '2 × Area_triangle = Area_parallelogram' 并显示数值验证。",
+    "8. 容错策略：- 非法形状检测：若三点共线，显示错误提示并高亮问题顶点；- 网络中断/保存失败：自动本地缓存操作日志（IndexedDB），重连后同步；- 快速连续操作防抖（debounce 50-150ms），拖拽更新用 requestAnimationFrame 节流。",
+    "9. 多设备/触摸兼容：- pointer events + 手势识别（单指拖动顶点，双指缩放画布，双击重置视图）；- 提供键盘模式（选中顶点后箭头微调），并在触控设备显示更大 hit area。",
+    "10. 测试用例建议：- 拖拽顶点到各边界/极端值并检查是否计算正确；- 触发动画并中途跳过检查状态一致性；- 输入非法数值触发的提示与回退是否合理。"
+  ],
+  "示意与实现参考": [
+    "示意1：顶点拖拽伪流程：onVertexDragStart -> capture pointerId -> add pointermove handler -> 在 pointermove 中执行: requestAnimationFrame(() => { newPos = projectToCanvas(pointer); if (!isCollinearAfterMove(newPos)) { updateVertex(vertexId, newPos); computeBaseHeightArea(); render(); } else { renderWarningFlash(vertexId); } }); -> onVertexDragEnd -> validateFinalShape -> pushHistory()。实现参考：在 React 中用 useRef 存 pointerId，用 useState 更新 shape；在 Vue 中用 ref 与 nextTick 协调渲染。",
+    "示意2：三角形拼接动画实现参考：计算平移向量 = 底边向量 normalized × baseLength；复制 original polygon -> apply transform: translate + scaleX(-1) around mid-point -> animate CSS transform from identity to target using transition 或在 JS 中逐帧 tween（GSAP 或自写 easing），在 animation complete 回调中触发展示等式与数值替换。",
+    "示意3：错误提示与容错交互：当检测到共线时，右侧 StepGuide 展示 '请拖动顶点以使三角形非退化'，同时在画布上闪烁红色提示圈与建议动作按钮（'自动修正'），点击自动修正将顶点沿法线微移固定距离并记录为 hintUsed=true。实现参考：将自动修正作为可逆操作并写入 undo stack。"
+  ]
+}

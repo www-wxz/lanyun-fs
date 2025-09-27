@@ -1,0 +1,162 @@
+{
+  "html_structure": {
+    "布局": "单页面，顶部标题说明区，中间双栏：左侧SVG动画画布与分步提示，右侧交互控件与数学展示区，底部步骤控制条",
+    "主要元素": [
+      "<header id='titleBar' class='bar'>...</header>",
+      "<main id='mainArea' class='container'>",
+      "  <section id='canvasArea' class='left'>",
+      "    <svg id='demoSVG' viewBox='0 0 800 500' preserveAspectRatio='xMidYMid meet'></svg>",
+      "    <div id='hintBox' class='hint'>提示与引导文本</div>",
+      "  </section>",
+      "  <aside id='controlArea' class='right'>",
+      "    <div id='mathPanel'>实时数值与公式展示</div>",
+      "    <div id='toolPanel'>交互控件</div>",
+      "  </aside>",
+      "</main>",
+      "<footer id='stepControls' class='bar'>步骤按钮、滑块与状态</footer>"
+    ],
+    "控件": [
+      "<button id='btnStart'>开始</button>",
+      "<button id='btnPause'>暂停</button>",
+      "<button id='btnReset'>重置</button>",
+      "<button id='btnPrev'>上一步</button>",
+      "<button id='btnNext'>下一步</button>",
+      "<button id='btnShowFormula'>显示/隐藏公式</button>",
+      "<input id='radiusSlider' type='range' min='20' max='150' value='80'>",
+      "<input id='sectorsSlider' type='range' min='2' max='40' value='8'>",
+      "<label><input id='toggleDrag' type='checkbox'> 可拖拽半径</label>",
+      "<button id='measureTool'>测量周长（卷尺模拟）</button>"
+    ],
+    "SVG子元素建议id": [
+      "<circle id='circleShape' />",
+      "<line id='radiusLine' />",
+      "<circle id='radiusHandle' />",
+      "<g id='sectorsGroup'></g>",
+      "<g id='unwrappedLineGroup'></g>",
+      "<rect id='rearrangeArea'></rect>",
+      "<text id='labelRadius'></text>",
+      "<text id='labelDiameter'></text>",
+      "<text id='labelCircumference'></text>",
+      "<text id='labelArea'></text>"
+    ],
+    "布局说明": "左侧画布用于两个实验场景：1) 周长演示（解开圆弧或滚动展示）2) 面积演示（扇形切割并排列近似矩形），右侧用于数值、公式、提示与练习题，底部为控制步骤和进度"
+  },
+  "css_plan": {
+    "整体风格": "明亮、卡通化、教育友好，柔和圆角、适合5~6年级学生",
+    "主要配色": "主色调：蓝(#4DA6FF)、绿(#66CC99)、辅色：橙(#FFB36B)、黄色高光(#FFD54F)",
+    "字体与大小": "圆润无衬线字体（例如 'Nunito', 'Noto Sans SC'），正文16px~18px，提示14px，标题22px~26px",
+    "布局样式": "顶部和底部为固定条，main横向分栏，左侧SVG自适应宽度，右侧控件卡片式展示",
+    "控件样式": "按钮圆角8px，颜色渐变，悬停有轻微放大和投影；滑块宽度100%，色彩随数值动态变化",
+    "提示样式": "hintBox 半透明背景、卡片阴影、渐显/渐隐过渡0.25s",
+    "互动高亮": [
+      "拖拽时高亮被拖拽元素（描边加粗，颜色切换为橙色）",
+      "当前步骤区域闪烁提示（短暂脉冲动画0.6s）",
+      "数值更新时标签淡入并短暂放大以吸引注意"
+    ],
+    "SVG样式": [
+      "circleShape 填充浅蓝透明（rgba），描边深蓝",
+      "sectors 填充交替颜色以便区分扇形",
+      "radiusHandle 为可拖拽的圆点，带阴影和放大交互效果",
+      "unwrappedLine 线段带虚线样式并有箭头指示展开方向"
+    ],
+    "响应式": "在小屏（平板）自动将右侧控件收起为可切换面板，触控优化更大触控点（>=44px）"
+  },
+  "js_plan": {
+    "总体架构": "模块化：UI控制模块、SVG渲染模块、物理/数学计算模块、动画控制模块、步骤引导模块",
+    "库与技术栈": "原生JS + SVG；动画使用 requestAnimationFrame 与可选 GSAP（若启用则作为平滑补充）；触摸和鼠标事件都支持",
+    "事件绑定": [
+      "btnStart 点击 -> 启动当前步骤动画",
+      "btnPause 点击 -> 暂停/继续动画",
+      "btnReset 点击 -> 重置所有图形与数据到初始状态",
+      "btnNext / btnPrev 点击 -> 切换教学步骤并播放对应演示",
+      "radiusSlider input -> 实时更改半径并重绘圆与相关数值",
+      "sectorsSlider input -> 实时更改扇形数量并重新切割/重排",
+      "toggleDrag change -> 启用/禁用 radiusHandle 的拖拽",
+      "radiusHandle mousedown/touchstart -> 开始拖拽；mousemove/touchmove -> 更新半径；mouseup/touchend -> 结束拖拽",
+      "measureTool 点击 -> 启动画布上“卷尺展开”交互并高亮周长匹配",
+      "demoSVG resize -> 重新计算坐标以保持视图自适应"
+    ],
+    "关键函数与逻辑": {
+      "init()": "初始化SVG元素、绑定事件、设置初始半径和扇形数，显示第一步提示",
+      "drawCircle(r)": "根据半径r绘制circleShape、radiusLine和radiusHandle，并更新标签位置",
+      "computeValues(r)": "返回{radius:r, diameter:2*r, circumference:2*Math.PI*r, area:Math.PI*r*r}，并四舍五入显示到适当小数位（整洁友好）",
+      "drawSectors(r, n)": "将圆分成n个扇形，生成sectorsGroup，每个扇形可独立动画展开与排列",
+      "animateUnwrapCircumference()": "演示把圆周‘解开’成近似直线：1) 在圆周上选择若干弧段 2) 动画把弧段沿路径逐段平移到直线上 3) 动态显示直线长度并与2rπ比较",
+      "animateRearrangeSectors(n)": "把n个扇形交替上下排列形成近似矩形的动画：使用requestAnimationFrame平滑过渡扇形位置和旋转，演示当n增大时形状更接近矩形",
+      "updateMathPanel(values)": "将computeValues返回的数据实时渲染到mathPanel并在显示公式时用高亮对应变量（r、d、π）",
+      "stepController(stepIndex)": "按步骤序列控制演示：步骤包括 1) 观察圆与半径， 2) 改变半径观察数值变化， 3) 周长演示（解开/滚动） 4) 面积演示（扇形重排） 5) 总结并显示公式证明要点",
+      "showHint(message, type)": "在hintBox显示引导语言（观察点、提出问题、提示操作），并在必要时提供下一步建议",
+      "throttleDrag()": "对mousemove/touchmove进行节流以保证性能（约60fps）",
+      "snapOnEnd()": "拖拽结束后将半径值与滑块对齐，给出反馈（绿色勾或抖动提示）"
+    },
+    "动画与交互细节": [
+      "逐步演示：下一步按钮触发明确的步骤动画，并在每步开始时提供一条引导提示和要观察的现象",
+      "拖拽交互：拖动radiusHandle可以直观改变半径，实时更新labels与计算值；触控支持拇指友好目标",
+      "滑块交互：radiusSlider与sectorsSlider可精细调整数值并同步SVG动画，滑块滑动时暂停自动播放以便学生观察",
+      "动态高亮：在展示公式时，高亮画布中对应几何量（例如在显示C=2πr时，circle边缘高亮与radiusLine高亮联动）",
+      "可视化π常数：在数学展示区提供一个小动画，沿着圆周点着颜色循环标识π周期的直观意义（示例：比较直径长度与圆周长度的关系）",
+      "测量工具：measureTool模拟用一段可拖拽“线带”沿着圆周铺开并显示长度数值，完成时自动与2πr对比并提示",
+      "扇形数量影响：sectorsSlider增加n值时扇形重排动画更明显地逼近矩形，右侧即时显示“逼近矩形高≈r，宽≈πr”的提示"
+    ],
+    "教学引导与反馈": [
+      "每一步结束时自动弹出小问题（例如：当半径翻倍时，周长和面积如何变化？），并提供解题提示或让学生用控件验证",
+      "当学生达成观察（例如：通过展开弧段看到直线长度约等于π×直径）显示奖励动画（星星或勾）并记录该步骤完成状态",
+      "错误防护：阻止不合逻辑的操作（例如将半径设为负）并给出友好提示"
+    ],
+    "性能与兼容性": "使用SVG矢量绘制保证缩放清晰；对低性能设备自动降低动画帧率和简化扇形数量；支持Chrome/Edge/Safari/移动浏览器"
+  },
+  "teaching_content": {
+    "一级主题": "图形与几何",
+    "二级主题": "图形 的认识与测量",
+    "年级": "5～6年级",
+    "课标要求": "探索圆的周长和面积计算公式。",
+    "基本实验活动": "探索圆的周长和面积计算公式"
+  },
+  "step_sequence": {
+    "步骤1": {
+      "标题": "认识圆与半径",
+      "目标": "让学生识别半径、直径、圆周并用滑块或拖拽改变半径观察变化",
+      "互动": [
+        "拖拽 radiusHandle",
+        "radiusSlider 改变r"
+      ],
+      "提示": "观察：半径变大，圆看起来如何变化？实时看数学面板的数值"
+    },
+    "步骤2": {
+      "标题": "探索周长（直观）",
+      "目标": "通过模拟把圆周‘解开’为直线，观察长度与直径的关系",
+      "互动": [
+        "measureTool 点击并拖动展开弧段",
+        "播放解开动画"
+      ],
+      "提示": "思考：展开后直线长度与直径的比值接近什么常数？"
+    },
+    "步骤3": {
+      "标题": "数学说明：C = 2πr",
+      "目标": "展示实时计算公式并高亮图形对应量，验证不同r下的数值一致性",
+      "互动": [
+        "btnShowFormula 切换公式",
+        "调整 r 验证"
+      ],
+      "提示": "提示：用计算器或右侧数值对比，观察周长是否等于2×π×r"
+    },
+    "步骤4": {
+      "标题": "探索面积（切扇重排）",
+      "目标": "把圆切成若干扇形并交替排列，观察近似矩形的形成，理解面积公式",
+      "互动": [
+        "sectorsSlider 改变扇形数",
+        "播放重排动画"
+      ],
+      "提示": "观察：当扇形数变多时，重排后近似矩形的高和宽分别是什么？面积如何由此得到πr²？"
+    },
+    "步骤5": {
+      "标题": "总结与验证练习",
+      "目标": "通过控件自由实验并回答提示问题（例如半径变为原来的2倍，会发生什么）",
+      "互动": [
+        "自由调整所有控件",
+        "回答内置问题并查看提示答案"
+      ],
+      "提示": "鼓励学生记录观察结果并与公式对照验证"
+    }
+  }
+}

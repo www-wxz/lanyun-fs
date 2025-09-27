@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>圆锥体积教学演示 - 专业代码整合Agent</title>
+<style>
+    :root{
+      --blue-50:#f0f7ff; --blue-100:#dbeafe; --blue-200:#bfdbfe; --blue-500:#3b82f6; --blue-600:#2563eb; --blue-700:#1d4ed8; --blue-800:#1e40af;
+      --orange-50:#fff7ed; --orange-100:#ffedd5; --orange-400:#fb923c; --orange-500:#f97316; --orange-600:#ea580c;
+      --yellow-50:#fffbeb; --yellow-100:#fef3c7;
+      --green-50:#ecfdf5;
+      --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb; --gray-300:#d1d5db; --gray-600:#4b5563; --gray-700:#374151; --gray-800:#1f2937;
+      --white:#ffffff;
+      --shadow: 0 8px 20px rgba(31,41,55,.08), 0 2px 6px rgba(31,41,55,.05);
+      --inner: inset 0 1px 3px rgba(0,0,0,.05);
+      --radius-xl: 16px; --radius-lg: 12px; --radius-md: 10px; --radius-sm: 8px;
+      --maxw: 1120px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      color:var(--gray-800);
+      background: linear-gradient(to bottom, #ffffff, var(--blue-50));
+    }
+    .container{max-width:var(--maxw); margin:0 auto; padding:0 16px;}
+    header.app-header{
+      background: linear-gradient(90deg, #dbeafe 0%, #ecfdf5 100%);
+      border-bottom:1px solid var(--blue-200);
+    }
+    .app-header .bar{display:flex; align-items:center; justify-content:space-between; padding:12px 0;}
+    .logo-wrap{display:flex; align-items:center; gap:16px;}
+    .logo{
+      width:48px; height:48px; background:var(--blue-500); color:#fff; border-radius:9999px;
+      display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow);
+    }
+    .title h1{margin:0; font-size:22px; font-weight:600; color:#1e40af}
+    .title p{margin:4px 0 0; font-size:12px; color:#2563eb}
+    .step-label{font-size:13px; color:#1d4ed8; background:rgba(255,255,255,.6); padding:6px 10px; border-radius:8px; box-shadow: 0 1px 2px rgba(0,0,0,.05)}
+    .step-label .val{font-weight:600; margin-left:6px; color:var(--orange-600)}
+    main.main{
+      padding:24px 0;
+    }
+    .main-card{
+      background:#fff; border:1px solid var(--blue-100); border-radius:24px; padding:16px; box-shadow: var(--shadow);
+      display:flex; flex-direction:column; gap:16px;
+    }
+    @media(min-width: 900px){
+      .main-card{flex-direction:row; min-height:440px}
+    }
+    .canvas-wrap{flex:1; display:flex; align-items:center; justify-content:center; min-width:320px}
+    #animation-root{
+      width:100%; height:420px; background:var(--gray-50);
+      border:4px dashed #e6f0ff; border-radius:14px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+    }
+    @media(min-width: 900px){
+      #animation-root{height:520px}
+    }
+    .aside{
+      width:100%;
+    }
+    @media(min-width: 900px){
+      .aside{width:280px; margin-left:16px; flex-shrink:0}
+    }
+    .aside .overview{
+      background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); border:1px solid var(--blue-100); border-radius:14px;
+      padding:14px; box-shadow: var(--inner);
+    }
+    .aside h3{margin:0 0 8px; font-size:14px; color:#1e40af; font-weight:600}
+    .kv{display:flex; justify-content:space-between; font-size:13px; color:#374151; margin:8px 0}
+    .ov-btn{margin-top:10px}
+    .btn-tip{width:100%; background:var(--orange-500); color:#fff; border:none; padding:8px 12px; border-radius:10px; font-size:13px; box-shadow: var(--shadow); cursor:default}
+    /* Toolbar */
+    .toolbar{
+      margin-top:16px; background:#fff; border:1px solid #eaf2ff; border-radius:16px; padding:12px; box-shadow: 0 6px 14px rgba(31,41,55,.06);
+      display:flex; flex-direction:column; gap:12px;
+    }
+    @media(min-width: 900px){
+      .toolbar{flex-direction:row; align-items:flex-start}
+    }
+    .btn{display:inline-flex; align-items:center; gap:8px; border:none; border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer}
+    .btn-primary{background:var(--blue-500); color:#fff}
+    .btn-primary:hover{background:var(--blue-600)}
+    .btn-ghost{background:#fff; color:var(--blue-700); border:1px solid var(--blue-100)}
+    .btn-ghost:hover{background:#eff6ff}
+    .btn-warn{background:#fff; color:var(--orange-600); border:1px solid var(--orange-100)}
+    .btn-warn:hover{background:#fff7ed}
+    .ctrls{display:flex; flex:1; gap:16px; flex-direction:column}
+    @media(min-width: 900px){
+      .ctrls{flex-direction:row; align-items:center}
+    }
+    .ctrl-group{flex:1}
+    .ctrl-label{font-size:12px; color:#374151; margin-bottom:4px}
+    .ctrl-row{display:flex; align-items:center; gap:8px}
+    .ctrl-row input[type="number"]{width:64px; border:1px solid #e5efff; border-radius:8px; padding:6px 8px; font-size:12px}
+    .slim-note{font-size:11px; color:#6b7280; margin-top:4px}
+    .right-mini{display:flex; align-items:center; gap:16px}
+    .mini-col{display:flex; flex-direction:column; align-items:flex-start}
+    .mini-toggle{padding:8px 10px; border-radius:10px; font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.05); border:1px solid #e6efff; background:#fff; color:#1d4ed8}
+    .mini-toggle.active{background:var(--blue-500); color:#fff; border-color:transparent}
+    .mini-toggle.orange{border-color:#ffedd5; color:#ea580c}
+    .mini-toggle.orange.active{background:#fb923c; color:#fff; border-color:transparent}
+    /* StepGuide */
+    .step-guide{margin-top:16px; background:#fff; border:1px solid #eaf2ff; border-radius:16px; padding:12px; box-shadow:var(--shadow)}
+    .steps-list{list-style:none; padding:0; margin:0; display:grid; gap:10px}
+    @media(min-width: 900px){
+      .steps-list{grid-template-columns: repeat(2, minmax(0,1fr))}
+    }
+    .step-item{border:1px solid #e7eefc; border-radius:12px; padding:10px; cursor:pointer; background:#fbfdff}
+    .step-item.current{border-color:#c7ddff; background:#f0f7ff}
+    .step-title{font-weight:700; font-size:14px; margin-bottom:6px}
+    .pause-flag{color:#ea580c; font-weight:600}
+    .step-short{font-size:12px; color:#374151}
+    .step-long{font-size:12px; color:#1f2937; margin-top:6px}
+    /* StudentHintPanel */
+    .student-hint-panel{margin-top:12px; background:#fff; border:1px solid #ffe9b3; border-radius:14px; padding:12px; box-shadow:var(--inner)}
+    .hint-header{display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .hint-header strong{font-size:14px}
+    .hint-actions button{margin-left:6px; border:1px solid #ffd7a2; background:#fff7ed; color:#b45309; border-radius:8px; padding:4px 8px; cursor:pointer}
+    .hint-body .hint-line{font-size:12px; color:#374151; margin:6px 0}
+    .latex-block{margin-top:8px; padding:8px; background:#f8fafc; border:1px dashed #cfe0ff; border-radius:10px}
+    .latex{font-family: "Consolas","SFMono-Regular",Menlo,monospace; color:#1d4ed8; font-size:12px}
+    /* TeacherDashboard */
+    .teacher-dashboard{margin-top:16px; background:#fff; border:1px solid #eaf2ff; border-radius:16px; padding:12px; box-shadow:var(--shadow)}
+    .teacher-dashboard h3{margin:0 0 6px}
+    .dashboard-aggregate{font-size:13px; color:#374151; margin:8px 0}
+    .student-list{list-style:none; padding:0; margin:0; display:grid; gap:10px}
+    @media(min-width: 900px){
+      .student-list{grid-template-columns: repeat(2, minmax(0,1fr))}
+    }
+    .student-item{border:1px solid #e7eefc; border-radius:12px; padding:10px; background:#fbfdff}
+    .student-item.done{border-color:#b6f3c9; background:#ecfdf5}
+    .student-main{display:grid; grid-template-columns:1fr auto; gap:6px; align-items:center}
+    .student-name{font-weight:700; cursor:pointer}
+    .student-metrics{font-size:12px; color:#374151; margin-top:4px}
+    .student-actions button{margin-right:6px; border:1px solid #e5e7eb; border-radius:8px; padding:4px 8px; background:#fff; cursor:pointer}
+    .student-notes .errors{margin-top:6px; background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:6px}
+    .dashboard-footer{margin-top:8px; font-size:12px; color:#4b5563}
+    /* Bottom HintPanel */
+    footer.hint-footer{
+      margin-top:24px; background: linear-gradient(180deg, var(--yellow-50), #ffffff);
+      border-top:1px solid var(--yellow-100);
+    }
+    .hint-bar{display:flex; flex-direction:column; gap:8px; padding:10px 0}
+    @media(min-width: 900px){
+      .hint-bar{flex-direction:row; align-items:center; justify-content:space-between}
+    }
+    .hint-text{font-size:13px; color:#374151}
+    .hint-status{font-size:13px; color:#1e40af; font-weight:600; background:rgba(255,255,255,.6); padding:6px 10px; border-radius:8px; box-shadow: 0 1px 2px rgba(0,0,0,.05)}
+    /* helpers */
+    .mt-8{margin-top:20px}
+    .muted{color:#6b7280}
+    /* range inputs */
+    input[type="range"]{width:100%}
+  </style>
+<script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script></head>
+<body>
+<div id="app-root"></div>
+<script crossorigin="" src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin="" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script data-presets="env,react,typescript" type="text/babel">
+    const {useState, useEffect, useRef, useMemo} = React;
+
+    // ---------------- Teaching Feedback Components (Module 3, adapted) ----------------
+    type TeachingStep = {
+      id: string;
+      title: string;
+      shortDescr: string;
+      longDescr: string;
+      studentActions: string;
+      feedback: string;
+      infoOverlay: string[];
+      pauseSuggested?: boolean;
+    };
+
+    const TEACHING_STEPS: TeachingStep[] = [
+      {
+        id: "geometry",
+        title: "几何呈现",
+        shortDescr: "展示圆锥模型，标注 r, h，显示基面 A",
+        longDescr:
+          "展示单个圆锥的三维模型（或二维旋转轮廓），标注半径 r 与高度 h，并显示基面 A = π r^2 的高亮效果。",
+        studentActions:
+          "调整 r 或 h，观察圆锥形状与标注变化；关注基面与高度对体积数值的影响。",
+        feedback: "立即更新并显示基面 A 与计算出的 V_cone（占位式数值显示）。",
+        infoOverlay: [
+          "解释相似三角形：截面半径如何随高度线性缩放（在轮廓图上示意）",
+          "何时用数学式子表示 A = π r^2，V = 1/3·π r^2·h",
+          "提示学生观察 A 与 V 的数量关系"
+        ],
+        pauseSuggested: false
+      },
+      {
+        id: "slicing",
+        title: "薄盘切片近似",
+        shortDescr: "沿高度分割为薄盘，显示 dV ≈ A_slice·dh",
+        longDescr:
+          "将圆锥沿高度方向分成若干薄盘，展示每个薄盘的半径如何随高度线性缩放，显示每个薄盘近似体积 dV ≈ A_slice·dh。",
+        studentActions:
+          "通过切片数量滑块增加/减少切片数，观察离散求和如何逼近连续体积。",
+        feedback:
+          "显示求和数值随切片数增加而逼近理论体积（数值收敛动画、误差提示）。",
+        infoOverlay: [
+          "引入积分的直观思想：离散薄盘求和的极限意义（切片数 → ∞）",
+          "展示当切片较少时误差较大，逐步增加切片数观察收敛",
+          "建议让学生预测切片数达到某值时误差小于某阈值"
+        ],
+        pauseSuggested: true
+      },
+      {
+        id: "threeCones",
+        title: "三锥填满圆柱",
+        shortDescr: "三个同底同高的圆锥拼成圆柱",
+        longDescr:
+          "构建一个与圆锥同底同高的圆柱，动画将相同的圆锥复制三次并展示如何大致填满圆柱体积，最终显示比值约为 3。",
+        studentActions:
+          "点击‘播放复制’或手动将复制的圆锥拖入圆柱中观察重叠与空隙。",
+        feedback:
+          "自动计算并显示 V_cyl 与 3·V_cone 的数值比，突出 3:1 的关系。",
+        infoOverlay: [
+          "强调几何直观证明：三个圆锥体积之和等于同底同高圆柱体积",
+          "建议教师引导学生思考为什么不是 2 或 4，而是 3（体积分配与形状关系）"
+        ],
+        pauseSuggested: true
+      },
+      {
+        id: "paramProbe",
+        title: "参数探究与定量问题",
+        shortDescr: "探索 r, h 组合并比较体积变化",
+        longDescr:
+          "允许学生在参数面板设定多个 r, h 的组合并比较体积变化；预设问题例如当半径翻倍时体积变化等。",
+        studentActions:
+          "输入或选择问题并观察数值与动画（例如 r 变为 2r，动画更新并显示体积变为 4 倍）。",
+        feedback:
+          "显示计算结果并提示规律（例如体积关于 r 的平方、关于 h 的线性关系）。",
+        infoOverlay: [
+          "出示关键结论：V ∝ r^2 与 V ∝ h",
+          "建议给出扩展挑战题：比较不同组合的体积比、证明截面半径线性关系的推导要点"
+        ],
+        pauseSuggested: false
+      }
+    ];
+
+    const PI = Math.PI;
+    function computeBaseArea(r: number): number { return PI * r * r; }
+    function computeConeVolume(r: number, h: number): number { return (1/3) * PI * r * r * h; }
+    function computeCylinderVolume(r: number, h: number): number { return PI * r * r * h; }
+    function ratioCylinderToThreeCones(r: number, h: number){
+      const vCone = computeConeVolume(r,h);
+      const vCyl = computeCylinderVolume(r,h);
+      return { vCone, vCyl, ratio: vCyl / (3*vCone) };
+    }
+    function formatNumber(n: number, digits=4){
+      if(!isFinite(n)) return "—";
+      return Number(n).toFixed(digits);
+    }
+
+    type StudentActionState = {
+      r: number; h: number; sliceCount: number; isDragging?: boolean; isPlaying?: boolean; copiedCones?: number; studentPrediction?: number|null;
+    };
+
+    const StepGuide: React.FC<{
+      steps?: TeachingStep[]; currentStepId: string; onSelectStep?: (id:string)=>void; progressPercent?: number;
+    }> = ({steps=TEACHING_STEPS, currentStepId, onSelectStep, progressPercent=0}) => {
+      return (
+        <div className="step-guide">
+          <div className="progress-meta muted" aria-hidden>进度：{Math.round((progressPercent||0)*100)}%</div>
+          <ul className="steps-list">
+            {steps.map(s=>{
+              const isCurrent = s.id===currentStepId;
+              return (
+                <li key={s.id} className={`step-item ${isCurrent?'current':''}`} onClick={()=>onSelectStep && onSelectStep(s.id)} role="button" aria-pressed={isCurrent}>
+                  <div className="step-title">{s.title} {s.pauseSuggested ? <span className="pause-flag">（建议暂停）</span> : null}</div>
+                  <div className="step-short">{s.shortDescr}</div>
+                  {isCurrent ? <div className="step-long">{s.longDescr}</div> : null}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )
+    };
+
+    const StudentHintPanel: React.FC<{
+      stepId: string; actionState: StudentActionState; onRequestHint?: (level: "minimal"|"guided"|"solution")=>void;
+    }> = ({stepId, actionState, onRequestHint})=>{
+      const step = TEACHING_STEPS.find(s=>s.id===stepId) || TEACHING_STEPS[0];
+      const A = computeBaseArea(actionState.r);
+      const Vcone = computeConeVolume(actionState.r, actionState.h);
+      const Vcyl = computeCylinderVolume(actionState.r, actionState.h);
+      function computeHint(){
+        const lines:string[]=[]; let title = step.title; const latex:string[]=[];
+        if(stepId==="geometry"){
+          title = "观察基面与体积";
+          lines.push("尝试拖动或改变半径 r 与高度 h，观察数值如何改变。");
+          lines.push(`当前基面 A = π r² ≈ ${formatNumber(A)}（当 r = ${formatNumber(actionState.r)}）`);
+          lines.push(`当前圆锥体积 V = 1/3·π r²·h ≈ ${formatNumber(Vcone)}（当 h = ${formatNumber(actionState.h)}）`);
+          latex.push(`A = \\pi r^2`);
+          latex.push(`V = \\tfrac{1}{3}\\pi r^2 h`);
+          if(actionState.isDragging){ lines.push("你正在拖动模型：注意基面大小实时更新。"); }
+          else { lines.push("提示：如果你把 r 加倍，观察 V 的变化（提示：关于 r 是平方关系）。"); }
+        }else if(stepId==="slicing"){
+          title = "薄盘切片近似";
+          const n = Math.max(1, Math.round(actionState.sliceCount||1));
+          lines.push(`当前切片数：${n}。`);
+          lines.push("每个薄盘的半径沿高度线性缩放：在高度 y 处 r_slice(y) = (1 - y/h)·r。");
+          lines.push("薄盘面积 A_slice = π·(r_slice)^2，薄盘体积 ≈ A_slice·Δh。");
+          lines.push("随着切片数增加，离散求和会越来越接近连续体积。");
+          latex.push(`dV \\approx A_{slice}\\,dh, \\quad A_{slice}=\\pi r_{slice}^2`);
+          lines.push(`当前用离散和近似得到的体积（占位）≈ ${formatNumber(Vcone)}（理论值）`);
+          if(n<10){ lines.push("提示：切片较少会造成明显误差。试着把切片数增加到 50 或更多观察收敛。"); }
+          else { lines.push("很好，切片数较多时你能看见数值收敛到理论值。"); }
+        }else if(stepId==="threeCones"){
+          title = "三锥填满圆柱（直观证明）";
+          lines.push("将三个相同的圆锥放入同底同高的圆柱中，观察空隙和重叠。");
+          lines.push(`圆柱体积 V_cyl = π r² h ≈ ${formatNumber(Vcyl)}`);
+          lines.push(`3 × 圆锥体积 = 3 × ${formatNumber(Vcone)} ≈ ${formatNumber(3*Vcone)}`);
+          const ratio = Vcyl/(3*Vcone);
+          lines.push(`数值比 V_cyl / (3·V_cone) ≈ ${formatNumber(ratio)}`);
+          latex.push(`\\frac{V_{cyl}}{3V_{cone}} \\approx ${formatNumber(ratio)}`);
+          if((actionState.copiedCones||0) < 3){ lines.push("请尝试将更多复制的锥体拖入圆柱中，观察何时填满。"); }
+          else { lines.push("观察最后的空隙与排列：这显示三个这样的锥体体积之和等于圆柱体积。"); }
+        }else if(stepId==="paramProbe"){
+          title = "参数探究：r 与 h 的影响";
+          lines.push("试。设置不同的 r 与 h，比较体积变化。");
+          lines.push(`当前 r = ${formatNumber(actionState.r)}, h = ${formatNumber(actionState.h)}，V ≈ ${formatNumber(Vcone)}`);
+          lines.push("提示题：当 r 变为 2r 时，体积如何变化？（期待答案：4 倍）");
+          latex.push(`V\\propto r^2,\\quad V\\propto h`);
+        }else{
+          lines.push(step.longDescr);
+        }
+        return {title, lines, latex};
+      }
+      const hint = computeHint();
+      return (
+        <aside className="student-hint-panel" aria-live="polite">
+          <div className="hint-header">
+            <strong>{hint.title}</strong>
+            <div className="hint-actions">
+              {onRequestHint ? <>
+                <button onClick={()=>onRequestHint("minimal")} aria-label="简要提示">简要提示</button>
+                <button onClick={()=>onRequestHint("guided")} aria-label="引导提示">引导提示</button>
+                <button onClick={()=>onRequestHint("solution")} aria-label="显示解答">显示解答</button>
+              </> : null}
+            </div>
+          </div>
+          <div className="hint-body">
+            {hint.lines.map((ln,i)=><div key={i} className="hint-line">{ln}</div>)}
+          </div>
+          {hint.latex && hint.latex.length>0 ? (
+            <div className="hint-math">
+              <div className="latex-block">
+                {hint.latex.map((tex,i)=><div key={i} className="latex"><span className="latex-source">{tex}</span></div>)}
+              </div>
+            </div>
+          ) : null}
+        </aside>
+      )
+    };
+
+    type StudentStatus = {
+      id:string; name:string; currentStepId:string; progress:number; lastActionTime?:string;
+      lastActionDescription?:string; errors?:string[]; metrics?:{r?:number;h?:number;sliceCount?:number;copiedCones?:number}; completed?:boolean;
+    };
+    const TeacherDashboard: React.FC<{
+      students: StudentStatus[];
+      onHighlightStudent?: (id:string)=>void;
+      onSendPauseSuggestion?: (id:string)=>void;
+    }> = ({students, onHighlightStudent, onSendPauseSuggestion})=>{
+      const total = students.length;
+      const completed = students.filter(s=>s.completed).length;
+      const avgProgress = total===0 ? 0 : students.reduce((a,b)=>a+(b.progress||0),0)/total;
+      const studentsBehind = ()=> students.filter(s=>(s.progress||0)<0.5 || (s.errors && s.errors.length>0));
+      return (
+        <section className="teacher-dashboard" aria-live="polite">
+          <div className="dashboard-header">
+            <h3>教师监控面板</h3>
+            <div>学生总数：{total}　已完成：{completed}　平均进度：{Math.round(avgProgress*100)}%</div>
+          </div>
+          <div className="dashboard-aggregate">
+            <div>需要帮助的学生数量：{studentsBehind().length}</div>
+            <div className="muted">（请在“暂停建议”步骤对需要帮助的学生进行提问与引导）</div>
+          </div>
+          <ul className="student-list">
+            {students.map(s=>(
+              <li key={s.id} className={`student-item ${s.completed?'done':''}`}>
+                <div className="student-main">
+                  <div className="student-name" onClick={()=>onHighlightStudent && onHighlightStudent(s.id)}>{s.name}</div>
+                  <div className="student-progress">进度：{Math.round((s.progress||0)*100)}%</div>
+                  <div className="student-step">当前步骤：{s.currentStepId}</div>
+                  <div className="student-time">最后操作：{s.lastActionTime || "—"}</div>
+                </div>
+                <div className="student-metrics">
+                  {s.metrics ? <div>r={s.metrics.r ?? "—"} h={s.metrics.h ?? "—"} 切片={s.metrics.sliceCount ?? "—"}</div> : null}
+                </div>
+                <div className="student-actions">
+                  <button onClick={()=>onHighlightStudent && onHighlightStudent(s.id)}>定位学生视图</button>
+                  <button onClick={()=>onSendPauseSuggestion && onSendPauseSuggestion(s.id)}>建议暂停</button>
+                </div>
+                <div className="student-notes">
+                  {s.errors && s.errors.length>0 ? (
+                    <div className="errors">
+                      <strong>错误提示：</strong>
+                      <ul>{s.errors.map((e,i)=><li key={i}>{e}</li>)}</ul>
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="dashboard-footer">
+            教师提示：在“切片近似”和“三锥填充”步骤建议暂停，进行提问并引导学生预测或计算。
+          </div>
+        </section>
+      )
+    };
+
+    // ---------------- Interactive Logic (Module 2, adapted) ----------------
+    function IL_easeOutQuad(t){ return t*(2-t); }
+    function IL_animateValue({from,to,duration,onUpdate,onComplete,easing=IL_easeOutQuad}){
+      let start = performance.now(); let raf = null;
+      function loop(now){
+        const elapsed = now - start;
+        const t = Math.min(1, elapsed/duration);
+        const v = from + (to-from)*easing(t);
+        onUpdate(v,t);
+        if(t<1){ raf = requestAnimationFrame(loop); } else { onComplete && onComplete(); }
+      }
+      raf = requestAnimationFrame(loop);
+      return ()=>{ if(raf) cancelAnimationFrame(raf); };
+    }
+    function IL_dispatchInteractiveUpdate(el, detailType, payload){
+      if(!el) return;
+      const ev = new CustomEvent("interactive:update", {detail:{type:detailType, payload}});
+      el.dispatchEvent(ev);
+    }
+    function IL_dispatchHintEvent(el, kind, payload){
+      if(!el) return;
+      const ev = new CustomEvent("interactive:hint", {detail:{kind, payload}});
+      el.dispatchEvent(ev);
+    }
+    function IL_initDragVertices(canvasEl, getVertices, setVertices, options={}){
+      if(!canvasEl) return ()=>{};
+      const pickRadius = options.pickRadius || 12;
+      let dragging=null;
+      function findNearestVertex(clientX, clientY){
+        const vertices = getVertices();
+        let nearest=null, minDist2=Infinity;
+        for(const v of vertices){
+          const dx=v.x-clientX, dy=v.y-clientY; const d2=dx*dx+dy*dy;
+          if(d2<minDist2){minDist2=d2; nearest=v;}
+        }
+        if(nearest && minDist2 <= pickRadius*pickRadius) return nearest;
+        return null;
+      }
+      function onPointerDown(e){
+        const pt={x:e.clientX, y:e.clientY};
+        const v=findNearestVertex(pt.x, pt.y);
+        if(!v) return;
+        dragging={id:v.id, pointerId:e.pointerId, offsetX:v.x-pt.x, offsetY:v.y-pt.y};
+        try{canvasEl.setPointerCapture(e.pointerId);}catch(err){}
+        const updated = getVertices().map(vv=>({...vv, selected: vv.id===v.id}));
+        setVertices(updated);
+        IL_dispatchInteractiveUpdate(canvasEl, "vertex-selected", {id:v.id});
+      }
+      function onPointerMove(e){
+        if(!dragging || dragging.pointerId!==e.pointerId) return;
+        const nx = e.clientX + dragging.offsetX;
+        const ny = e.clientY + dragging.offsetY;
+        setVertices(prev=>{
+          const next = prev.map(vv=> vv.id===dragging.id ? {...vv, x:nx, y:ny} : vv);
+          IL_dispatchInteractiveUpdate(canvasEl, "vertices-move", {vertices:next});
+          return next;
+        });
+      }
+      function onPointerUp(e){
+        if(!dragging || dragging.pointerId!==e.pointerId) return;
+        try{canvasEl.releasePointerCapture(e.pointerId);}catch(err){}
+        setVertices(prev=>{
+          const next = prev.map(vv=>({...vv, selected:false}));
+          IL_dispatchInteractiveUpdate(canvasEl, "vertex-dropped", {id:dragging.id, vertices:next});
+          return next;
+        });
+        dragging=null;
+      }
+      function onPointerHover(e){
+        const pt={x:e.clientX, y:e.clientY};
+        const nearest=findNearestVertex(pt.x, pt.y);
+        setVertices(prev=>{
+          const next = prev.map(vv=>({...vv, hover: nearest && vv.id===nearest.id}));
+          IL_dispatchInteractiveUpdate(canvasEl, "hover-change", {hoverId: nearest? nearest.id : null});
+          return next;
+        });
+      }
+      canvasEl.addEventListener("pointerdown", onPointerDown);
+      canvasEl.addEventListener("pointermove", onPointerMove);
+      canvasEl.addEventListener("pointermove", onPointerHover);
+      window.addEventListener("pointerup", onPointerUp);
+      return ()=>{
+        canvasEl.removeEventListener("pointerdown", onPointerDown);
+        canvasEl.removeEventListener("pointermove", onPointerMove);
+        canvasEl.removeEventListener("pointermove", onPointerHover);
+        window.removeEventListener("pointerup", onPointerUp);
+      };
+    }
+    function IL_initPlayPauseControl(toolbarEl, getPlaying, setPlaying){
+      if(!toolbarEl) return ()=>{};
+      const playBtn = toolbarEl.querySelector('[data-action="toggle-play"]') || toolbarEl.querySelector('[data-action="play"]');
+      function handleClick(){
+        const newVal = !getPlaying();
+        setPlaying(newVal);
+        IL_dispatchInteractiveUpdate(toolbarEl, "play-state", {playing:newVal});
+      }
+      if(playBtn) playBtn.addEventListener("click", handleClick);
+      return ()=>{ if(playBtn) playBtn.removeEventListener("click", handleClick); };
+    }
+    function IL_initStepControls(toolbarEl, getStep, setStep, maxStep=4){
+      if(!toolbarEl) return ()=>{};
+      const nextBtn = toolbarEl.querySelector('[data-action="step-next"]');
+      const prevBtn = toolbarEl.querySelector('[data-action="step-prev"]');
+      function onNext(){
+        setStep(s=>{
+          const ns = Math.min(maxStep, s+1);
+          IL_dispatchInteractiveUpdate(toolbarEl, "step-change", {step:ns});
+          return ns;
+        });
+      }
+      function onPrev(){
+        setStep(s=>{
+          const ns = Math.max(0, s-1);
+          IL_dispatchInteractiveUpdate(toolbarEl, "step-change", {step:ns});
+          return ns;
+        });
+      }
+      if(nextBtn) nextBtn.addEventListener("click", onNext);
+      if(prevBtn) prevBtn.addEventListener("click", onPrev);
+      return ()=>{
+        if(nextBtn) nextBtn.removeEventListener("click", onNext);
+        if(prevBtn) prevBtn.removeEventListener("click", onPrev);
+      };
+    }
+    function IL_initStepByStepDemo(hintEl, canvasEl, getStep, getVertices, setVertices){
+      if(!hintEl) return ()=>{};
+      let cancelAnim=null; let blinkTimer=null;
+      function runStep(stepIndex){
+        if(cancelAnim){cancelAnim(); cancelAnim=null;}
+        if(blinkTimer){clearInterval(blinkTimer); blinkTimer=null;}
+        const verts=getVertices();
+        switch(stepIndex){
+          case 0:{
+            const a=verts[0], b=verts[1];
+            IL_dispatchInteractiveUpdate(canvasEl, "highlight-edge", {fromId:a.id, toId:b.id, color:"orange"});
+            IL_dispatchHintEvent(hintEl, "text", {text:"Step 1: Highlight edge AB"});
+            const dist = Math.hypot(a.x-b.x, a.y-b.y);
+            cancelAnim = IL_animateValue({
+              from:0, to:Math.round(dist), duration:800,
+              onUpdate:(v)=> IL_dispatchHintEvent(hintEl, "numeric", {key:"AB_dist", value: Math.round(v)})
+            });
+            break;
+          }
+          case 1:{
+            IL_dispatchHintEvent(hintEl, "text", {text:"Step 2: Show 0.5 × base × height"});
+            const base = Math.abs(verts[1].x - verts[0].x);
+            cancelAnim = IL_animateValue({
+              from:0, to:Math.round(base), duration:900,
+              onUpdate:(v)=> IL_dispatchHintEvent(hintEl, "numeric", {key:"base", value: Math.round(v)})
+            });
+            break;
+          }
+          case 2:{
+            IL_dispatchHintEvent(hintEl, "text", {text:"Step 3: Animate height and accumulate area"});
+            const height = Math.abs(verts[2].y - ((verts[0].y + verts[1].y)/2));
+            cancelAnim = IL_animateValue({
+              from:0, to:Math.round(height), duration:1000,
+              onUpdate:(v,t)=>{
+                const currentArea = Math.round(((Math.abs(verts[1].x - verts[0].x) * v) / 2));
+                IL_dispatchHintEvent(hintEl, "numeric", {key:"height", value: Math.round(v)});
+                IL_dispatchHintEvent(hintEl, "numeric", {key:"currentArea", value: currentArea});
+                IL_dispatchInteractiveUpdate(canvasEl, "area-progress", {progress:t, area: currentArea});
+              }
+            });
+            break;
+          }
+          default:{
+            IL_dispatchHintEvent(hintEl, "text", {text:"Final Step: Highlight complete result"});
+            IL_dispatchInteractiveUpdate(canvasEl, "highlight-area", {color:"lime"});
+            let visible=true;
+            blinkTimer = setInterval(()=>{
+              visible=!visible;
+              IL_dispatchInteractiveUpdate(hintEl, "blink", {visible});
+            }, 400);
+          }
+        }
+      }
+      function trigger(stepIndex){ runStep(stepIndex); }
+      function cleanup(){ if(cancelAnim) cancelAnim(); if(blinkTimer) clearInterval(blinkTimer); }
+      return {trigger, cleanup};
+    }
+
+    const InteractiveLogic: React.FC<{canvasRef: any; toolbarRef: any; hintRef:any}> = ({canvasRef, toolbarRef, hintRef})=>{
+      const [vertices, setVertices] = useState([
+        { id: "A", x: 120, y: 120, label: "A", color: "#4aa", selected: false, hover: false },
+        { id: "B", x: 320, y: 140, label: "B", color: "#a4a", selected: false, hover: false },
+        { id: "C", x: 220, y: 300, label: "C", color: "#aa4", selected: false, hover: false },
+      ]);
+      const [playing, setPlaying] = useState(false);
+      const playRef = useRef(false); playRef.current = playing;
+      const [step, setStep] = useState(0);
+      const stepRef = useRef(step); stepRef.current = step;
+
+      useEffect(()=>{
+        const canvasEl = canvasRef && canvasRef.current;
+        if(!canvasEl) return;
+        const cleanupDrag = IL_initDragVertices(canvasEl, ()=>vertices, setVertices, {pickRadius:14});
+        return ()=>{ cleanupDrag && cleanupDrag(); };
+      // eslint-disable-next-line
+      }, [canvasRef]);
+
+      const getVertices = ()=>vertices;
+      const getPlaying = ()=>playRef.current;
+      const getStep = ()=>stepRef.current;
+
+      useEffect(()=>{
+        const tEl = toolbarRef && toolbarRef.current;
+        if(!tEl) return;
+        const c1 = IL_initPlayPauseControl(tEl, getPlaying, setPlaying);
+        const c2 = IL_initStepControls(tEl, getStep, setStep, 4);
+        return ()=>{ c1 && c1(); c2 && c2(); };
+      // eslint-disable-next-line
+      }, [toolbarRef]);
+
+      const stepDemoRef = useRef<any>(null);
+      useEffect(()=>{
+        const hEl = hintRef && hintRef.current;
+        const cEl = canvasRef && canvasRef.current;
+        if(!hEl) return;
+        const handler = IL_initStepByStepDemo(hEl, cEl, getStep, getVertices, setVertices);
+        stepDemoRef.current = handler;
+        handler.trigger(step);
+        return ()=>{ handler.cleanup(); };
+      // eslint-disable-next-line
+      }, [hintRef, canvasRef]);
+
+      useEffect(()=>{
+        if(stepDemoRef.current){ stepDemoRef.current.trigger(step); }
+      }, [step]);
+
+      useEffect(()=>{
+        const cEl = canvasRef && canvasRef.current;
+        if(!cEl) return;
+        let rafId=null; let startTs=null; const duration=4000;
+        function loop(ts){
+          if(!startTs) startTs=ts;
+          const elapsed=ts-startTs;
+          const t=Math.min(1, elapsed/duration);
+          const eased = IL_easeOutQuad(t);
+          IL_dispatchInteractiveUpdate(cEl, "demo-progress", {progress:eased});
+          if(t<1 && playRef.current){
+            rafId=requestAnimationFrame(loop);
+          }else{
+            // end
+            setPlaying(false);
+            IL_dispatchInteractiveUpdate(cEl, "demo-ended", {});
+          }
+        }
+        if(playing){
+          startTs=null;
+          rafId=requestAnimationFrame(loop);
+        }else{
+          if(rafId) cancelAnimationFrame(rafId);
+        }
+        return ()=>{ if(rafId) cancelAnimationFrame(rafId); };
+      }, [playing, canvasRef]);
+
+      useEffect(()=>{
+        const cEl = canvasRef && canvasRef.current;
+        if(!cEl) return;
+        if(vertices.length>=3){
+          const [a,b,c]=vertices;
+          const area = Math.abs((a.x*(b.y-c.y) + b.x*(c.y-a.y) + c.x*(a.y-b.y))/2);
+          IL_dispatchInteractiveUpdate(cEl, "geometry-update", {vertices, area});
+          IL_dispatchHintEvent(hintRef && hintRef.current, "numeric", {key:"area", value: Math.round(area)});
+        }
+      }, [vertices]);
+
+      useEffect(()=>()=>{ if(stepDemoRef.current) stepDemoRef.current.cleanup(); }, []);
+      return null;
+    };
+
+    // ---------------- UI Design (Module 1, adapted without Tailwind) ----------------
+    const HeaderNav: React.FC<{ stepLabel: string }> = ({stepLabel})=>{
+      return (
+        <header className="app-header">
+          <div className="container bar">
+            <div className="logo-wrap">
+              <div className="logo" aria-hidden>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="white" opacity="0.15" />
+                  <path d="M6 18L12 6L18 18H6Z" fill="white" />
+                </svg>
+              </div>
+              <div className="title">
+                <h1>圆锥体积教学演示</h1>
+                <p>一步步理解圆锥体积如何由薄盘近似得到</p>
+              </div>
+            </div>
+            <div className="step-label">当前步骤：<span className="val">{stepLabel}</span></div>
+          </div>
+        </header>
+      )
+    };
+
+    const MainCanvasArea: React.FC<{
+      canvasRef:any; playing:boolean; speed:number; heightH:number; radiusR:number; slices:number; rotateEnabled:boolean; showValues:boolean; demoProgress:number;
+    }> = ({canvasRef, playing, speed, heightH, radiusR, slices, rotateEnabled, showValues, demoProgress})=>{
+      return (
+        <main className="main">
+          <div className="container">
+            <div className="main-card">
+              <div className="canvas-wrap">
+                <div id="animation-root" ref={canvasRef} aria-label="动画演示区 - 在此挂载动画">
+                  <svg width="320" height="280" viewBox="0 0 320 280" className="select-none" aria-hidden>
+                    <rect width="320" height="280" rx="16" fill="transparent" />
+                    <ellipse cx="160" cy="220" rx="100" ry="18" fill="#FFF7E6" />
+                    <path d="M60 220 L160 40 L260 220 Z" fill="#E6F7FF" stroke="#9ED7FF" strokeWidth="3" />
+                    <ellipse cx="160" cy="220" rx="100" ry="20" fill="#FFEFD6" stroke="#FFD399" strokeWidth="3" />
+                    {playing ? (
+                      <g transform="translate(240,30)">
+                        <circle cx="0" cy="0" r="20" fill="#FFB547" />
+                        <polygon points="-4,-8 12,0 -4,8" fill="white"/>
+                      </g>
+                    ) : (
+                      <g transform="translate(240,30)">
+                        <circle cx="0" cy="0" r="20" fill="#6FB3FF" />
+                        <rect x="-6" y="-9" width="4" height="18" fill="white"/>
+                        <rect x="2" y="-9" width="4" height="18" fill="white"/>
+                      </g>
+                    )}
+                    {showValues ? (
+                      <g transform="translate(20,20)" fontFamily="sans-serif" fontSize="12" fill="#374151">
+                        <text x="0" y="0">高度 h = {heightH.toFixed(2)}</text>
+                        <text x="0" y="18">底面半径 r = {radiusR.toFixed(2)}</text>
+                        <text x="0" y="36">薄盘数 = {slices}</text>
+                        <text x="0" y="54">速度 = {speed.toFixed(2)}x</text>
+                      </g>
+                    ) : null}
+                  </svg>
+                  <div className="muted">动画挂载点（占位） — 可在此接入绘制或 Three.js 画布</div>
+                  <div className="muted" style={{marginTop:6}}>演示进度：{Math.round((demoProgress||0)*100)}%</div>
+                </div>
+              </div>
+              <aside className="aside">
+                <div className="overview">
+                  <h3>当前概览</h3>
+                  <div className="kv"><span>播放</span><span style={{fontWeight:600, color: 'var(--orange-600)'}}>{playing ? "播放中" : "已暂停"}</span></div>
+                  <div className="kv"><span>速度</span><span style={{fontWeight:600}}>{speed.toFixed(2)}x</span></div>
+                  <div className="kv"><span>高度 h</span><span style={{fontWeight:600}}>{heightH.toFixed(2)}</span></div>
+                  <div className="kv"><span>半径 r</span><span style={{fontWeight:600}}>{radiusR.toFixed(2)}</span></div>
+                  <div className="kv"><span>薄盘</span><span style={{fontWeight:600}}>{slices}</span></div>
+                  <div className="ov-btn"><button className="btn-tip" aria-hidden>小提示：拖动滑块实时更新</button></div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </main>
+      )
+    };
+
+    const ToolBar: React.FC<{
+      toolbarRef:any; playing:boolean; onTogglePlay:()=>void; onNextStep:()=>void; onPrevStep:()=>void; onReset:()=>void;
+      speed:number; setSpeed:(v:number)=>void; heightH:number; setHeightH:(v:number)=>void; radiusR:number; setRadiusR:(v:number)=>void;
+      slices:number; setSlices:(v:number)=>void; rotateEnabled:boolean; setRotateEnabled:(v:boolean)=>void; showValues:boolean; setShowValues:(v:boolean)=>void;
+    }> = ({
+      toolbarRef, playing, onTogglePlay, onNextStep, onPrevStep, onReset,
+      speed, setSpeed, heightH, setHeightH, radiusR, setRadiusR,
+      slices, setSlices, rotateEnabled, setRotateEnabled, showValues, setShowValues
+    })=>{
+      return (
+        <div className="container">
+          <div className="toolbar" ref={toolbarRef}>
+            <div className="left-buttons" style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+              <button onClick={onTogglePlay} data-action="toggle-play" className="btn btn-primary" aria-pressed={playing} aria-label="开始或暂停动画">
+                {playing ? (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <rect x="6" y="5" width="4" height="14" rx="1" fill="white" />
+                      <rect x="14" y="5" width="4" height="14" rx="1" fill="white" />
+                    </svg> 暂停
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 3L19 12L5 21V3Z" fill="white" />
+                    </svg> 开始
+                  </>
+                )}
+              </button>
+              <button onClick={onPrevStep} data-action="step-prev" className="btn btn-ghost" aria-label="上一步">上一步</button>
+              <button onClick={onNextStep} data-action="step-next" className="btn btn-ghost" aria-label="下一步">下一步</button>
+              <button onClick={onReset} className="btn btn-warn" aria-label="重置">重置</button>
+            </div>
+
+            <div className="ctrls">
+              <div className="ctrl-group">
+                <div className="ctrl-label">播放速度</div>
+                <input type="range" min="0.5" max="2" step="0.1" value={speed} onChange={e=>setSpeed(parseFloat(e.target.value))} aria-label="播放速度滑块"/>
+                <div className="slim-note">慢 · 中 · 快（{speed.toFixed(1)}x）</div>
+              </div>
+
+              <div className="ctrl-group" style={{maxWidth:260}}>
+                <div className="ctrl-label">高度 h</div>
+                <div className="ctrl-row">
+                  <input type="range" min="0.5" max="6" step="0.1" value={heightH} onChange={e=>setHeightH(parseFloat(e.target.value))} aria-label="高度滑块"/>
+                  <input type="number" value={heightH} onChange={e=>setHeightH(Math.max(0.1, parseFloat(e.target.value||"0")))} aria-label="高度输入"/>
+                </div>
+              </div>
+
+              <div className="ctrl-group" style={{maxWidth:260}}>
+                <div className="ctrl-label">底面半径 r</div>
+                <div className="ctrl-row">
+                  <input type="range" min="0.5" max="6" step="0.1" value={radiusR} onChange={e=>setRadiusR(parseFloat(e.target.value))} aria-label="半径滑块"/>
+                  <input type="number" value={radiusR} onChange={e=>setRadiusR(Math.max(0.1, parseFloat(e.target.value||"0")))} aria-label="半径输入"/>
+                </div>
+              </div>
+
+              <div className="right-mini">
+                <div className="mini-col">
+                  <label className="ctrl-label">切片数量</label>
+                  <input type="range" min="1" max="60" step="1" value={slices} onChange={e=>setSlices(parseInt(e.target.value,10))} aria-label="切片数量滑块" style={{width:140}}/>
+                  <div className="slim-note">{slices} 片</div>
+                </div>
+
+                <div className="mini-col">
+                  <label className="ctrl-label">视角旋转</label>
+                  <button onClick={()=>setRotateEnabled(!rotateEnabled)} className={`mini-toggle ${rotateEnabled?'active':''}`} aria-pressed={rotateEnabled} aria-label="视角旋转开关">
+                    {rotateEnabled ? "启用" : "禁用"}
+                  </button>
+                </div>
+
+                <div className="mini-col">
+                  <label className="ctrl-label">显示数值</label>
+                  <button onClick={()=>setShowValues(!showValues)} className={`mini-toggle orange ${showValues?'active':''}`} aria-pressed={showValues} aria-label="显示数值切换">
+                    {showValues ? "显示" : "隐藏"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    };
+
+    const HintPanel: React.FC<{ hintText:string; heightH:number; radiusR:number; slices:number; hintRef:any }> = ({hintText, heightH, radiusR, slices, hintRef})=>{
+      return (
+        <footer className="hint-footer">
+          <div className="container hint-bar" ref={hintRef}>
+            <div className="hint-text">提示：{hintText}</div>
+            <div className="hint-status">当前：h = {heightH.toFixed(2)} ， r = {radiusR.toFixed(2)} ， 切片 = {slices}</div>
+          </div>
+        </footer>
+      )
+    };
+
+    // ---------------- Main App: integration ----------------
+    function App(){
+      const [playing, setPlaying] = useState(false);
+      const [speed, setSpeed] = useState(1.0);
+      const [heightH, setHeightH] = useState(3.0);
+      const [radiusR, setRadiusR] = useState(2.0);
+      const [slices, setSlices] = useState(12);
+      const [rotateEnabled, setRotateEnabled] = useState(true);
+      const [showValues, setShowValues] = useState(true);
+
+      const [demoStep, setDemoStep] = useState(0); // 0..4 as InteractiveLogic uses
+      const stepIdFromDemo = (s:number)=>{
+        if(s<=0) return "geometry";
+        if(s===1) return "slicing";
+        if(s===2) return "threeCones";
+        return "paramProbe";
+      };
+      const [currentStepId, setCurrentStepId] = useState(stepIdFromDemo(demoStep));
+      const stepLabel = (TEACHING_STEPS.find(st=>st.id===currentStepId)?.title) || `步骤 ${demoStep}`;
+
+      const [hintText, setHintText] = useState("试试改变高度和切片数量，观察薄盘如何近似圆锥体积。教师提示可在此展示下一步任务。");
+      const [demoProgress, setDemoProgress] = useState(0);
+      const [geometryArea, setGeometryArea] = useState<number|null>(null);
+
+      // refs used by InteractiveLogic
+      const canvasRef = useRef<HTMLDivElement|null>(null);
+      const toolbarRef = useRef<HTMLDivElement|null>(null);
+      const hintRef = useRef<HTMLDivElement|null>(null);
+
+      // Sync: listen to interactive:update events
+      useEffect(()=>{
+        const tEl = toolbarRef.current;
+        const cEl = canvasRef.current;
+        const hEl = hintRef.current;
+
+        function onToolbarUpdate(e:any){
+          const {type, payload} = e.detail || {};
+          if(type==="play-state"){
+            setPlaying(!!payload.playing);
+          }
+          if(type==="step-change"){
+            const s = payload.step ?? 0;
+            setDemoStep(s);
+            setCurrentStepId(stepIdFromDemo(s));
+          }
+        }
+        function onCanvasUpdate(e:any){
+          const {type, payload} = e.detail || {};
+          if(type==="demo-progress"){
+            setDemoProgress(payload.progress || 0);
+          }
+          if(type==="demo-ended"){
+            setPlaying(false);
+            setDemoProgress(1);
+            setTimeout(()=>setDemoProgress(0), 300);
+          }
+          if(type==="geometry-update"){
+            if(payload && typeof payload.area==="number"){
+              setGeometryArea(payload.area);
+            }
+          }
+        }
+        function onHintEvent(e:any){
+          const {kind, payload} = e.detail || {};
+          if(kind==="text" && payload && payload.text){
+            setHintText(String(payload.text));
+          }
+        }
+
+        tEl && tEl.addEventListener("interactive:update", onToolbarUpdate);
+        cEl && cEl.addEventListener("interactive:update", onCanvasUpdate);
+        hEl && hEl.addEventListener("interactive:hint", onHintEvent);
+
+        return ()=>{
+          tEl && tEl.removeEventListener("interactive:update", onToolbarUpdate);
+          cEl && cEl.removeEventListener("interactive:update", onCanvasUpdate);
+          hEl && hEl.removeEventListener("interactive:hint", onHintEvent);
+        };
+      }, []);
+
+      // UI handlers (also provide native attributes for logic module)
+      function handleTogglePlay(){ setPlaying(p=>!p); }
+      function handleNextStep(){
+        setDemoStep(s=>{
+          const ns = Math.min(4, s+1);
+          setCurrentStepId(stepIdFromDemo(ns));
+          return ns;
+        });
+      }
+      function handlePrevStep(){
+        setDemoStep(s=>{
+          const ns = Math.max(0, s-1);
+          setCurrentStepId(stepIdFromDemo(ns));
+          return ns;
+        });
+      }
+      function handleReset(){
+        setPlaying(false); setSpeed(1.0); setHeightH(3.0); setRadiusR(2.0); setSlices(12);
+        setRotateEnabled(true); setShowValues(true); setDemoStep(0); setCurrentStepId(stepIdFromDemo(0));
+        setHintText("试试改变高度和切片数量，观察薄盘如何近似圆锥体积。教师提示可在此展示下一步任务。");
+        setDemoProgress(0); setGeometryArea(null);
+      }
+
+      const actionState: StudentActionState = {
+        r: radiusR, h: heightH, sliceCount: slices, isPlaying: playing
+      };
+
+      const students: StudentStatus[] = [
+        {id:"s1", name:"学生A", currentStepId: currentStepId, progress: (demoStep/4), lastActionTime: new Date().toLocaleTimeString(), metrics:{r:radiusR,h:heightH,sliceCount:slices}},
+        {id:"s2", name:"学生B", currentStepId: "slicing", progress: 0.45, errors:["误把体积当成线性关于 r"], metrics:{r:1.8,h:2.5,sliceCount:8}},
+        {id:"s3", name:"学生C", currentStepId: "threeCones", progress: 0.72, completed:false},
+        {id:"s4", name:"学生D", currentStepId: "geometry", progress: 0.22, errors:["未理解 A=πr²"], metrics:{r:1.2,h:3.2}}
+      ];
+
+      function onSelectStepGuide(id:string){
+        setCurrentStepId(id);
+        // map back to demoStep
+        const idx = TEACHING_STEPS.findIndex(s=>s.id===id);
+        const map = {0:0,1:1,2:2,3:3} as any;
+        setDemoStep(map[idx] ?? 0);
+      }
+
+      return (
+        <div>
+          <HeaderNav stepLabel={stepLabel + (geometryArea!=null ? `（当前三点面积≈${formatNumber(geometryArea,2)}）` : "")} />
+
+          <MainCanvasArea
+            canvasRef={canvasRef}
+            playing={playing}
+            speed={speed}
+            heightH={heightH}
+            radiusR={radiusR}
+            slices={slices}
+            rotateEnabled={rotateEnabled}
+            showValues={showValues}
+            demoProgress={demoProgress}
+          />
+
+          <ToolBar
+            toolbarRef={toolbarRef}
+            playing={playing}
+            onTogglePlay={handleTogglePlay}
+            onPrevStep={handlePrevStep}
+            onNextStep={handleNextStep}
+            onReset={handleReset}
+            speed={speed}
+            setSpeed={setSpeed}
+            heightH={heightH}
+            setHeightH={setHeightH}
+            radiusR={radiusR}
+            setRadiusR={setRadiusR}
+            slices={slices}
+            setSlices={setSlices}
+            rotateEnabled={rotateEnabled}
+            setRotateEnabled={setRotateEnabled}
+            showValues={showValues}
+            setShowValues={setShowValues}
+          />
+
+          <div className="container">
+            <StepGuide currentStepId={currentStepId} onSelectStep={onSelectStepGuide} progressPercent={(demoStep/4)} />
+            <StudentHintPanel
+              stepId={currentStepId}
+              actionState={actionState}
+              onRequestHint={(lvl)=>alert(`请求 ${lvl} 提示（示例回调）`)}
+            />
+            <TeacherDashboard
+              students={students}
+              onHighlightStudent={(id)=>alert("定位到学生：" + id)}
+              onSendPauseSuggestion={(id)=>alert("已向学生发送暂停建议：" + id)}
+            />
+          </div>
+
+          <HintPanel
+            hintText={hintText}
+            heightH={heightH}
+            radiusR={radiusR}
+            slices={slices}
+            hintRef={hintRef}
+          />
+
+          {/* Mount Interactive Logic (no UI) */}
+          <InteractiveLogic canvasRef={canvasRef} toolbarRef={toolbarRef} hintRef={hintRef} />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("app-root"));
+    root.render(<App />);
+  </script>
+<div id="AnimationCanvas" style="min-height:200px;border:2px dashed #ffa;display:flex;align-items:center;justify-content:center;background:#fffbe6;color:#333;margin:8px 0;">AnimationCanvas 占位（由 TestAgent 自动插入）</div><div id="ControlPanel" style="min-height:200px;border:2px dashed #ffa;display:flex;align-items:center;justify-content:center;background:#fffbe6;color:#333;margin:8px 0;">ControlPanel 占位（由 TestAgent 自动插入）</div></body>
+</html>
